@@ -1,4 +1,5 @@
 require 'rake_factory'
+require 'octokit'
 
 module RakeGithub
   module Tasks
