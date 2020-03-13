@@ -1,1 +1,1 @@
-require_relative 'tasks/deploy_key'
+require_relative 'tasks/deploy_keys'

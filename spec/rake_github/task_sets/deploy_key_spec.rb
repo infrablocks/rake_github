@@ -1,27 +1,25 @@
 require 'spec_helper'
 require 'fileutils'
 
-describe RakeGithub::TaskSets::DeployKey do
+describe RakeGithub::TaskSets::DeployKeys do
   include_context :rake
 
   def define_tasks(opts = {}, &block)
     subject.define({
         access_token: 'some-token',
-        repository: 'org/repo',
-        title: 'some-deploy-key',
-        public_key: File.read('spec/fixtures/ssh.public')
+        repository: 'org/repo'
     }.merge(opts), &block)
   end
 
   it 'adds all deploy key tasks in the provided namespace ' +
       'when supplied' do
-    define_tasks(namespace: :deploy_key)
+    define_tasks(namespace: :deploy_keys)
 
-    expect(Rake::Task.task_defined?('deploy_key:provision'))
+    expect(Rake::Task.task_defined?('deploy_keys:provision'))
         .to(be(true))
-    expect(Rake::Task.task_defined?('deploy_key:destroy'))
+    expect(Rake::Task.task_defined?('deploy_keys:destroy'))
         .to(be(true))
-    expect(Rake::Task.task_defined?('deploy_key:ensure'))
+    expect(Rake::Task.task_defined?('deploy_keys:ensure'))
         .to(be(true))
   end
 
@@ -34,20 +32,17 @@ describe RakeGithub::TaskSets::DeployKey do
   end
 
   context 'destroy task' do
-    it 'configures with the provided repository, title and access token' do
+    it 'configures with the provided repository and access token' do
       repository = 'my-org/my-repo'
-      title = 'some-deploy-key'
       access_token = 'some-access-token'
 
       define_tasks(
           repository: repository,
-          title: title,
           access_token: access_token)
 
       rake_task = Rake::Task["destroy"]
 
       expect(rake_task.creator.repository).to(eq(repository))
-      expect(rake_task.creator.title).to(eq(title))
       expect(rake_task.creator.access_token).to(eq(access_token))
     end
 
@@ -63,28 +58,44 @@ describe RakeGithub::TaskSets::DeployKey do
       expect(Rake::Task.task_defined?("destroy_it_all"))
           .to(be(true))
     end
+
+    it 'has no deploy keys by default' do
+      define_tasks
+
+      rake_task = Rake::Task["destroy"]
+
+      expect(rake_task.creator.deploy_keys).to(eq([]))
+    end
+
+    it 'uses the provided deploy keys when supplied' do
+      deploy_keys = [
+          {
+              title: 'the-deploy-key',
+              public_key: File.read('spec/fixtures/2.public')
+          }
+      ]
+      define_tasks(
+          deploy_keys: deploy_keys)
+
+      rake_task = Rake::Task["destroy"]
+
+      expect(rake_task.creator.deploy_keys).to(eq(deploy_keys))
+    end
   end
 
   context 'provision task' do
-    it 'configures with the provided repository, title, access token and ' +
-        'public key' do
+    it 'configures with the provided repository and access token' do
       repository = 'my-org/my-repo'
-      title = 'some-deploy-key'
       access_token = 'some-access-token'
-      public_key = File.read('spec/fixtures/ssh.public')
 
       define_tasks(
           repository: repository,
-          title: title,
-          access_token: access_token,
-          public_key: public_key)
+          access_token: access_token)
 
       rake_task = Rake::Task["provision"]
 
       expect(rake_task.creator.repository).to(eq(repository))
-      expect(rake_task.creator.title).to(eq(title))
       expect(rake_task.creator.access_token).to(eq(access_token))
-      expect(rake_task.creator.public_key).to(eq(public_key))
     end
 
     it 'uses a name of provision by default' do
@@ -99,21 +110,41 @@ describe RakeGithub::TaskSets::DeployKey do
       expect(Rake::Task.task_defined?("provision_things"))
           .to(be(true))
     end
+
+    it 'has no deploy keys by default' do
+      define_tasks
+
+      rake_task = Rake::Task["provision"]
+
+      expect(rake_task.creator.deploy_keys).to(eq([]))
+    end
+
+    it 'uses the provided deploy keys when supplied' do
+      deploy_keys = [
+          {
+              title: 'the-deploy-key',
+              public_key: File.read('spec/fixtures/2.public')
+          }
+      ]
+      define_tasks(
+          deploy_keys: deploy_keys)
+
+      rake_task = Rake::Task["provision"]
+
+      expect(rake_task.creator.deploy_keys).to(eq(deploy_keys))
+    end
   end
 
   context 'ensure task' do
-    it 'configures with the provided repository and title' do
+    it 'configures with the provided repository' do
       repository = 'my-org/my-repo'
-      title = 'some-deploy-key'
 
       define_tasks(
-          repository: repository,
-          title: title)
+          repository: repository)
 
       rake_task = Rake::Task["ensure"]
 
       expect(rake_task.creator.repository).to(eq(repository))
-      expect(rake_task.creator.title).to(eq(title))
     end
 
     it 'uses a name of ensure by default' do

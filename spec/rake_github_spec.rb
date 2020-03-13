@@ -5,26 +5,30 @@ RSpec.describe RakeGithub do
     expect(RakeGithub::VERSION).not_to be nil
   end
 
-  context 'define_deploy_key_tasks' do
-    context 'when instantiating RakeGithub::TaskSets::DeployKey' do
+  context 'define_deploy_keys_tasks' do
+    context 'when instantiating RakeGithub::TaskSets::DeployKeys' do
       it 'passes the provided block' do
         opts = {
             repository: 'org/repo',
-            title: 'some-deploy-key'
         }
 
         block = lambda do |t|
           t.access_token = 'some-token'
-          t.public_key = File.read('spec/fixtures/ssh.public')
+          t.deploy_keys = [
+              {
+                  title: 'some-key',
+                  public_key: File.read('spec/fixtures/ssh.public')
+              }
+          ]
         end
 
-        expect(RakeGithub::TaskSets::DeployKey)
+        expect(RakeGithub::TaskSets::DeployKeys)
             .to(receive(:define) do |passed_opts, &passed_block|
               expect(passed_opts).to(eq(opts))
               expect(passed_block).to(eq(block))
             end)
 
-        RakeGithub.define_deploy_key_tasks(opts, &block)
+        RakeGithub.define_deploy_keys_tasks(opts, &block)
       end
     end
   end
