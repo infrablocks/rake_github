@@ -6,9 +6,9 @@ module RakeGithub
     module DeployKeys
       class Provision < RakeFactory::Task
         default_name :provision
-        default_description RakeFactory::DynamicValue.new { |t|
+        default_description(RakeFactory::DynamicValue.new { |t|
           "Provision deploy keys to the #{t.repository} repository"
-        }
+        })
 
         parameter :repository, required: true
         parameter :access_token, required: true

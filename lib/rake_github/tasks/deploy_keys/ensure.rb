@@ -5,10 +5,10 @@ module RakeGithub
     module DeployKeys
       class Ensure < RakeFactory::Task
         default_name :ensure
-        default_description RakeFactory::DynamicValue.new { |t|
+        default_description(RakeFactory::DynamicValue.new { |t|
           "Ensure deploy keys are configured on the " +
               "#{t.repository} repository"
-        }
+        })
 
         parameter :repository, required: true
 

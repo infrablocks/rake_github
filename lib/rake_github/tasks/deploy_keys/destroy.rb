@@ -6,9 +6,9 @@ module RakeGithub
     module DeployKeys
       class Destroy < RakeFactory::Task
         default_name :destroy
-        default_description RakeFactory::DynamicValue.new { |t|
+        default_description(RakeFactory::DynamicValue.new { |t|
           "Destroys deploy keys from the #{t.repository} repository"
-        }
+        })
 
         parameter :repository, required: true
         parameter :access_token, required: true
