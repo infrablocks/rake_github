@@ -347,9 +347,14 @@ describe RakeGithub::Tasks::Releases::Create do
       tag_name: tag_name,
       assets: assets)
 
+    expected_log_message =
+      "Creating release " \
+      "with tag '#{tag_name}' " \
+      "on '#{repository}' repository...\n"
+
     expect do
       Rake::Task['releases:create'].invoke
-    end.to(output("Creating release with tag '#{tag_name}' on '#{repository}' repository...\n").to_stdout)
+    end.to(output(expected_log_message).to_stdout)
   end
 
   it 'logs that the release is being created for a release with a name' do
@@ -383,11 +388,17 @@ describe RakeGithub::Tasks::Releases::Create do
       access_token: access_token,
       tag_name: tag_name,
       release_name: release_name,
-      assets: assets)
+      assets: assets
+    )
+
+    expected_log_message =
+      "Creating release '#{release_name}' " \
+      "with tag '#{tag_name}' " \
+      "on '#{repository}' repository...\n"
 
     expect do
       Rake::Task['releases:create'].invoke
-    end.to(output("Creating release '#{release_name}' with tag '#{tag_name}' on '#{repository}' repository...\n").to_stdout)
+    end.to(output(expected_log_message).to_stdout)
   end
 
   it 'creates a release that has no assets' do
@@ -560,7 +571,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     expect(client)
       .to(have_received(:upload_asset)
-            .with(release_url, asset_1_path, { name: asset_name}))
+            .with(release_url, asset_1_path, { name: asset_name }))
   end
 
   it 'logs when uploading each asset' do
@@ -570,7 +581,7 @@ describe RakeGithub::Tasks::Releases::Create do
     asset_1_path = 'path/to/the/file1.zip'
     asset_2_path = 'path/to/the/file2.zip'
     asset_2_name = 'important.zip'
-    asset_2_definition = {path: asset_2_path, name: asset_2_name}
+    asset_2_definition = { path: asset_2_path, name: asset_2_name }
     assets = [asset_1_path, asset_2_definition]
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
@@ -598,9 +609,21 @@ describe RakeGithub::Tasks::Releases::Create do
       tag_name: tag_name,
       assets: assets)
 
+    expected_log_message1 =
+      "Uploading asset '#{asset_1_path}' " \
+      'to release ' \
+      "with tag '#{tag_name}'..."
+    expected_log_message2 =
+      "Uploading asset '#{asset_2_path}' " \
+      "with name '#{asset_2_name}' " \
+      'to release ' \
+      "with tag '#{tag_name}'..."
+
     expect do
       Rake::Task['releases:create'].invoke
-    end.to(output(/Uploading asset '#{asset_1_path}' to release with tag '#{tag_name}'\.\.\..*Uploading asset '#{asset_2_path}' with name '#{asset_2_name}' to release with tag '#{tag_name}'\.\.\./m).to_stdout)
+    end.to(
+      output(/#{expected_log_message1}\n#{expected_log_message2}/m)
+        .to_stdout)
   end
 
   def stub_side_effects
