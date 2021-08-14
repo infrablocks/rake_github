@@ -10,4 +10,8 @@ module RakeGithub
   def self.define_repository_tasks(opts = {}, &block)
     RakeGithub::TaskSets::Repository.define(opts, &block)
   end
+
+  def self.define_release_task(opts = {}, &block)
+    RakeGithub::Tasks::Releases::Create.define(opts, &block)
+  end
 end

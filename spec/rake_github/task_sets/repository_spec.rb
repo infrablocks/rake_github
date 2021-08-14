@@ -13,7 +13,8 @@ describe RakeGithub::TaskSets::Repository do
 
   it 'adds all tasks in the provided namespace when supplied' do
     define_tasks(
-        namespace: :github)
+        namespace: :github
+    )
 
     expect(Rake::Task.task_defined?('github:deploy_keys:provision'))
         .to(be(true))
