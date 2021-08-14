@@ -422,7 +422,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     allow(client)
       .to(receive(:create_release)
-            .with(repository, tag_name, anything)
+            .with(repository, tag_name, { draft: false, prerelease: false })
             .and_return(
               Sawyer::Resource.new(agent, { url: release_url })))
     allow(client)
@@ -438,7 +438,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     expect(client)
       .to(have_received(:create_release)
-            .with(repository, tag_name, anything))
+            .with(repository, tag_name, { draft: false, prerelease: false }))
     expect(client)
       .not_to(have_received(:upload_asset))
   end
@@ -465,7 +465,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     allow(client)
       .to(receive(:create_release)
-            .with(repository, tag_name, anything)
+            .with(repository, tag_name, { draft: false, prerelease: false })
             .and_return(
               Sawyer::Resource.new(agent, { url: release_url })))
     allow(client)
@@ -507,7 +507,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     allow(client)
       .to(receive(:create_release)
-            .with(repository, tag_name, anything)
+            .with(repository, tag_name, { draft: false, prerelease: false })
             .and_return(
               Sawyer::Resource.new(agent, { url: release_url })))
     allow(client)
@@ -555,7 +555,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     allow(client)
       .to(receive(:create_release)
-            .with(repository, tag_name, anything)
+            .with(repository, tag_name, { draft: false, prerelease: false })
             .and_return(
               Sawyer::Resource.new(agent, { url: release_url })))
     allow(client)
@@ -597,7 +597,7 @@ describe RakeGithub::Tasks::Releases::Create do
 
     allow(client)
       .to(receive(:create_release)
-            .with(repository, tag_name, anything)
+            .with(repository, tag_name, { draft: false, prerelease: false })
             .and_return(
               Sawyer::Resource.new(agent, { url: release_url })))
     allow(client)

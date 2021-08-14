@@ -25,6 +25,24 @@ module RakeGithub
         action do |t|
           client = Octokit::Client.new(access_token: access_token)
 
+          release_options = {
+            draft: t.draft,
+            prerelease: t.prerelease
+          }
+          if t.target_commitish
+            release_options[:target_commitish] = t.target_commitish
+          end
+          if t.release_name
+            release_options[:release_name] = t.release_name
+          end
+          if t.body
+            release_options[:body] = t.body
+          end
+          if t.discussion_category_name
+            release_options[:discussion_category_name] =
+              t.discussion_category_name
+          end
+
           puts 'Creating release' \
                "#{t.release_name ? " '#{t.release_name}'" : ''} " \
                "with tag '#{t.tag_name}' " \
@@ -32,12 +50,8 @@ module RakeGithub
           release = client.create_release(
             t.repository,
             t.tag_name,
-            target_commitish: t.target_commitish,
-            release_name: t.release_name,
-            body: t.body,
-            draft: t.draft,
-            prerelease: t.prerelease,
-            discussion_category_name: t.discussion_category_name)
+            release_options
+          )
 
           t.assets.each do |asset|
             if asset.is_a?(String)
@@ -46,8 +60,8 @@ module RakeGithub
             else
               puts(
                 "Uploading asset '#{asset[:path]}'" +
-                "#{asset[:name] ? " with name '#{asset[:name]}'" : ''} " +
-                "to release with tag '#{t.tag_name}'...")
+                  "#{asset[:name] ? " with name '#{asset[:name]}'" : ''} " +
+                  "to release with tag '#{t.tag_name}'...")
               client.upload_asset(
                 release.url, asset[:path], { name: asset[:name] })
             end
