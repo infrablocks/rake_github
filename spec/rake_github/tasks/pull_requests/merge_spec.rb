@@ -61,7 +61,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     repository = 'org/repo'
     access_token = 'some-token'
 
-    github_client = setup_mocks(repository, access_token)
+    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
     define_task(repository: repository, access_token: access_token)
 
     Rake::Task['pull_requests:merge'].invoke
@@ -76,7 +76,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     access_token = 'some-token'
     commit_message = 'merge PR #1'
 
-    github_client = setup_mocks(repository, access_token)
+    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
     define_task(repository: repository, access_token: access_token, commit_message: commit_message)
 
     Rake::Task['pull_requests:merge'].invoke
@@ -91,7 +91,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     access_token = 'some-token'
     commit_message = '%s [skip ci]'
 
-    github_client = setup_mocks(repository, access_token)
+    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
     define_task(repository: repository, access_token: access_token, commit_message: commit_message)
 
     Rake::Task['pull_requests:merge'].invoke
@@ -101,7 +101,18 @@ describe RakeGithub::Tasks::PullRequests::Merge do
             .with(repository, 1, 'add feature [skip ci]'))
   end
 
-  def setup_mocks(repo_name, access_token)
+  it 'throws an error if the current branch does not have an associated PR' do
+    repository = 'org/repo'
+    access_token = 'some-token'
+
+    setup_mocks(repository, access_token, 'branch_with_no_PR')
+    define_task(repository: repository, access_token: access_token)
+
+    expect{ Rake::Task['pull_requests:merge'].invoke }
+      .to(raise_error(NoPullRequestError, 'No pull request associated with branch branch_with_no_PR'))
+  end
+
+  def setup_mocks(repo_name, access_token, branch_name)
     agent = Sawyer::Agent.new('http://localhost')
     git_client = double('git client')
     github_client = double('Github client')
@@ -118,7 +129,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
     allow(git_client)
       .to(receive(:current_branch)
-            .and_return('branch_to_merge'))
+            .and_return(branch_name))
 
     allow(github_client)
       .to(receive(:pull_requests)
