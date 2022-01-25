@@ -3,7 +3,7 @@ PATH
   specs:
     rake_github (0.8.0.pre.6)
       colored2 (~> 3.1)
-      git (~> 1.9.1)
+      git (>= 1.9.1, < 1.11.0)
       octokit (~> 4.16)
       rake_factory (~> 0.23)
       sshkey (~> 2.0)
@@ -44,7 +44,7 @@ GEM
     faraday-patron (1.0.0)
     faraday-rack (1.0.0)
     gem-release (2.2.2)
-    git (1.9.1)
+    git (1.10.2)
       rchardet (~> 1.8)
     hamster (3.0.0)
       concurrent-ruby (~> 1.0)
