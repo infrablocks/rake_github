@@ -1,3 +1,3 @@
 module RakeGithub
-  VERSION = '0.8.0.pre.7'
+  VERSION = '0.8.0.pre.8'
 end
