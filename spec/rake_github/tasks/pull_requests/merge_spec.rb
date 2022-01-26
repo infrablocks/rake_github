@@ -31,7 +31,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     )
 
     expect(Rake::Task['pull_requests:merge'].full_comment)
-      .to(eq('Merges pull request on the current branch in the org/repo repository'))
+      .to(eq('Merges pull request on the specified branch in the org/repo repository'))
   end
 
   it 'fails if no repository is provided' do

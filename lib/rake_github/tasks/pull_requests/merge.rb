@@ -8,7 +8,7 @@ module RakeGithub
     module PullRequests
       class Merge < RakeFactory::Task
         default_description(RakeFactory::DynamicValue.new do |t|
-          "Merges pull request on the current branch in the #{t.repository} repository"
+          "Merges pull request on the specified branch in the #{t.repository} repository"
         end)
 
         parameter :repository, required: true
