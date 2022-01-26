@@ -22,6 +22,8 @@ describe RakeGithub::TaskSets::Repository do
         .to(be(true))
     expect(Rake::Task.task_defined?('github:deploy_keys:ensure'))
         .to(be(true))
+    expect(Rake::Task.task_defined?('github:pull_requests:merge'))
+        .to(be(true))
   end
 
   it 'adds all tasks in the root namespace when none supplied' do
@@ -32,6 +34,8 @@ describe RakeGithub::TaskSets::Repository do
     expect(Rake::Task.task_defined?('deploy_keys:destroy'))
         .to(be(true))
     expect(Rake::Task.task_defined?('deploy_keys:ensure'))
+        .to(be(true))
+    expect(Rake::Task.task_defined?('pull_requests:merge'))
         .to(be(true))
   end
 

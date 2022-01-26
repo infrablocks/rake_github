@@ -34,6 +34,7 @@ module RakeGithub
           destroy_task_name: RakeFactory::DynamicValue.new { |ts|
             ts.deploy_keys_destroy_task_name
           }
+      task Tasks::PullRequests::Merge, argument_names: [:branch_name]
 
       def define_on(application)
         around_define(application) do
@@ -41,6 +42,8 @@ module RakeGithub
             ns = case task_definition.klass.to_s
             when /DeployKeys/
               deploy_keys_namespace
+            when /PullRequests/
+              :pull_requests
             else
               nil
             end
