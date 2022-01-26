@@ -2,7 +2,6 @@
 
 require 'rake_factory'
 require 'octokit'
-require 'git'
 
 module RakeGithub
   module Tasks
@@ -14,18 +13,18 @@ module RakeGithub
 
         parameter :repository, required: true
         parameter :access_token, required: true
+        parameter :branch_name, required: true
         parameter :commit_message, default: ''
 
         action do |t|
-          current_branch = Git.open(Pathname.new('.')).current_branch
           github_client = Octokit::Client.new(access_token: access_token)
 
           open_prs = github_client.pull_requests(t.repository)
 
           current_pr = open_prs
-            .find { |pr| pr[:head][:ref] == current_branch }
+            .find { |pr| pr[:head][:ref] == t.branch_name }
 
-          raise NoPullRequestError.new current_branch if current_pr.nil?
+          raise NoPullRequestError.new t.branch_name if current_pr.nil?
 
           github_client.merge_pull_request(
             t.repository,

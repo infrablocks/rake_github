@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'octokit'
-require 'git'
 
 describe RakeGithub::Tasks::PullRequests::Merge do
   include_context :rake
@@ -37,34 +36,58 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
   it 'fails if no repository is provided' do
     define_task(
-      access_token: 'some-token',
-      tag_name: '0.1.0'
-    )
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.access_token = 'some-token'
+      t.branch_name = args.branch_name
+    end
 
     expect do
-      Rake::Task['pull_requests:merge'].invoke
+      Rake::Task['pull_requests:merge'].invoke('branch_name')
     end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
   it 'fails if no access token is provided' do
     define_task(
-      repository: 'org/repo',
-      tag_name: '0.1.0'
-    )
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = 'org/repo'
+      t.branch_name = args.branch_name
+    end
+
+    expect {
+      Rake::Task['pull_requests:merge'].invoke('branch_name')
+    }.to raise_error(RakeFactory::RequiredParameterUnset)
+  end
+
+  it 'fails if no branch_name is provided' do
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = 'org/repo'
+      t.access_token = 'some-token'
+      t.branch_name = args.branch_name
+    end
 
     expect {
       Rake::Task['pull_requests:merge'].invoke
     }.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
-  it 'merges pull request associated with current branch' do
+  it 'merges pull request associated with given branch name' do
     repository = 'org/repo'
     access_token = 'some-token'
+    github_client = setup_mocks(repository, access_token)
 
-    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
-    define_task(repository: repository, access_token: access_token)
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = repository
+      t.access_token = access_token
+      t.branch_name = args.branch_name
+    end
 
-    Rake::Task['pull_requests:merge'].invoke
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
     expect(github_client)
       .to(have_received(:merge_pull_request)
@@ -75,11 +98,18 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     repository = 'org/repo'
     access_token = 'some-token'
     commit_message = 'merge PR #1'
+    github_client = setup_mocks(repository, access_token)
 
-    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
-    define_task(repository: repository, access_token: access_token, commit_message: commit_message)
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = repository
+      t.access_token = access_token
+      t.branch_name = args.branch_name
+      t.commit_message = commit_message
+    end
 
-    Rake::Task['pull_requests:merge'].invoke
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
     expect(github_client)
       .to(have_received(:merge_pull_request)
@@ -90,11 +120,18 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     repository = 'org/repo'
     access_token = 'some-token'
     commit_message = '%s [skip ci]'
+    github_client = setup_mocks(repository, access_token)
 
-    github_client = setup_mocks(repository, access_token, 'branch_to_merge')
-    define_task(repository: repository, access_token: access_token, commit_message: commit_message)
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = repository
+      t.access_token = access_token
+      t.branch_name = args.branch_name
+      t.commit_message = commit_message
+    end
 
-    Rake::Task['pull_requests:merge'].invoke
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
     expect(github_client)
       .to(have_received(:merge_pull_request)
@@ -104,38 +141,33 @@ describe RakeGithub::Tasks::PullRequests::Merge do
   it 'throws an error if the current branch does not have an associated PR' do
     repository = 'org/repo'
     access_token = 'some-token'
+    setup_mocks(repository, access_token)
 
-    setup_mocks(repository, access_token, 'branch_with_no_PR')
-    define_task(repository: repository, access_token: access_token)
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = repository
+      t.access_token = access_token
+      t.branch_name = args.branch_name
+    end
 
-    expect{ Rake::Task['pull_requests:merge'].invoke }
+    expect{ Rake::Task['pull_requests:merge'].invoke('branch_with_no_PR') }
       .to(raise_error(NoPullRequestError, 'No pull request associated with branch branch_with_no_PR'))
   end
 
-  def setup_mocks(repo_name, access_token, branch_name)
+  def setup_mocks(repo_name, access_token)
     agent = Sawyer::Agent.new('http://localhost')
-    git_client = double('git client')
     github_client = double('Github client')
-
-    allow(Git)
-      .to(receive(:open)
-            .with(Pathname.new('.'))
-            .and_return(git_client))
-
     allow(Octokit::Client)
       .to(receive(:new)
             .with(hash_including(access_token: access_token))
             .and_return(github_client))
 
-    allow(git_client)
-      .to(receive(:current_branch)
-            .and_return(branch_name))
-
     allow(github_client)
       .to(receive(:pull_requests)
             .with(repo_name)
             .and_return([
-              { :title => 'add feature', :number => 1, :head => { :ref => 'branch_to_merge' } },
+              { :title => 'add feature', :number => 1, :head => { :ref => 'mergeable_branch' } },
               { :title => 'fix bug', :number => 2, :head => { :ref => 'different_branch' } }
             ]))
 
