@@ -16,6 +16,7 @@ module RakeGithub
       parameter :deploy_keys_provision_task_name, default: :provision
       parameter :deploy_keys_ensure_task_name, default: :ensure
       parameter :branch_name
+      parameter :commit_message, default: ''
 
       task Tasks::DeployKeys::Provision,
           name: RakeFactory::DynamicValue.new { |ts|
@@ -36,10 +37,13 @@ module RakeGithub
             ts.deploy_keys_destroy_task_name
           }
       task Tasks::PullRequests::Merge,
-          argument_names: [:branch_name],
-           branch_name: RakeFactory::DynamicValue.new { |ts|
-             ts.branch_name
-           }
+          argument_names: [:branch_name, :commit_message],
+          branch_name: RakeFactory::DynamicValue.new { |ts|
+            ts.branch_name
+          },
+          commit_message: RakeFactory::DynamicValue.new { |ts|
+            ts.commit_message
+          }
 
       def define_on(application)
         around_define(application) do
