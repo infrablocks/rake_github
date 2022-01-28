@@ -3,6 +3,8 @@
 require 'rake_factory'
 require 'octokit'
 
+require_relative '../../exceptions/no_pull_request_error'
+
 module RakeGithub
   module Tasks
     module PullRequests
@@ -25,7 +27,9 @@ module RakeGithub
           open_prs = client.pull_requests(t.repository)
           current_pr = open_prs.find { |pr| pr[:head][:ref] == t.branch_name }
 
-          raise NoPullRequestError, t.branch_name if current_pr.nil?
+          # rubocop:disable Style/RaiseArgs
+          raise Exceptions::NoPullRequestError.new(t.branch_name) if current_pr.nil?
+          # rubocop:enable Style/RaiseArgs
 
           client.merge_pull_request(
             t.repository,
