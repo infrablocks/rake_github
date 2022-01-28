@@ -41,16 +41,3 @@ module RakeGithub
     end
   end
 end
-
-class NoPullRequestError < StandardError
-  attr_reader :branch_name
-
-  def initialize(branch_name)
-    super()
-    @branch_name = branch_name
-  end
-
-  def message
-    format('No pull request associated with branch %s', branch_name)
-  end
-end
