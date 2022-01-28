@@ -39,6 +39,7 @@ module RakeGithub
              ts.deploy_keys_destroy_task_name
            }
       task Tasks::PullRequests::Merge,
+           # TODO: should this be here?
            argument_names: %i[branch_name commit_message],
            branch_name: RakeFactory::DynamicValue.new { |ts|
              ts.branch_name
