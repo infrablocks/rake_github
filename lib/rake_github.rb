@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rake_github/version'
 require 'rake_github/tasks'
 require 'rake_github/task_sets'

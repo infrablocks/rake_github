@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'octokit'
 
 describe RakeGithub::Tasks::PullRequests::Merge do
-  include_context :rake
+  include_context 'rake'
 
   def define_task(opts = {}, &block)
     opts = { namespace: :pull_requests }.merge(opts)
 
     namespace opts[:namespace] do
-      subject.define(opts, &block)
+      described_class.define(opts, &block)
     end
   end
 
@@ -19,8 +21,8 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       tag_name: '0.1.0'
     )
 
-    expect(Rake::Task.task_defined?('pull_requests:merge'))
-      .to(be(true))
+    expect(Rake.application)
+      .to(have_task_defined('pull_requests:merge'))
   end
 
   it 'gives the merge task a description' do
@@ -31,7 +33,8 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     )
 
     expect(Rake::Task['pull_requests:merge'].full_comment)
-      .to(eq('Merges pull request on the specified branch in the org/repo repository'))
+      .to(eq('Merges pull request on the specified branch in the org/repo '\
+             'repository'))
   end
 
   it 'fails if no repository is provided' do
@@ -55,9 +58,9 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       t.branch_name = args.branch_name
     end
 
-    expect {
+    expect do
       Rake::Task['pull_requests:merge'].invoke('branch_name')
-    }.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
   it 'fails if no branch_name is provided' do
@@ -69,15 +72,26 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       t.branch_name = args.branch_name
     end
 
-    expect {
+    expect do
       Rake::Task['pull_requests:merge'].invoke
-    }.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
-  it 'merges pull request associated with given branch name' do
+  it 'uses provided access token when communicating with Github' do
     repository = 'org/repo'
     access_token = 'some-token'
-    github_client = setup_mocks(repository, access_token)
+
+    client = stub_github_client
+
+    stub_successful_list_pull_requests_request(
+      client, repository, [
+        pull_request('add feature', 1, 'mergeable_branch'),
+        pull_request('fix bug', 2, 'different_branch')
+      ]
+    )
+    stub_successful_merge_pull_request_request(
+      client, repository, 1, 'add feature'
+    )
 
     define_task(
       argument_names: [:branch_name]
@@ -89,16 +103,58 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
     Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
-    expect(github_client)
+    expect(Octokit::Client)
+      .to(have_received(:new)
+            .with(hash_including(access_token: access_token)))
+  end
+
+  it 'merges pull request associated with given branch name' do
+    repository = 'org/repo'
+    access_token = 'some-token'
+
+    client = stub_github_client
+
+    stub_successful_list_pull_requests_request(
+      client, repository, [
+        pull_request('add feature', 1, 'mergeable_branch'),
+        pull_request('fix bug', 2, 'different_branch')
+      ]
+    )
+    stub_successful_merge_pull_request_request(
+      client, repository, 1, 'add feature'
+    )
+
+    define_task(
+      argument_names: [:branch_name]
+    ) do |t, args|
+      t.repository = repository
+      t.access_token = access_token
+      t.branch_name = args.branch_name
+    end
+
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
+
+    expect(client)
       .to(have_received(:merge_pull_request)
-            .with(repository, 1, ''))
+            .with(repository, 1, 'add feature'))
   end
 
   it 'allows custom PR merge commit message' do
     repository = 'org/repo'
     access_token = 'some-token'
     commit_message = 'merge PR #1'
-    github_client = setup_mocks(repository, access_token)
+
+    client = stub_github_client
+
+    stub_successful_list_pull_requests_request(
+      client, repository, [
+        pull_request('add feature', 1, 'mergeable_branch'),
+        pull_request('fix bug', 2, 'different_branch')
+      ]
+    )
+    stub_successful_merge_pull_request_request(
+      client, repository, 1, 'merge PR #1'
+    )
 
     define_task(
       argument_names: [:branch_name]
@@ -111,7 +167,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
     Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
-    expect(github_client)
+    expect(client)
       .to(have_received(:merge_pull_request)
             .with(repository, 1, commit_message))
   end
@@ -120,7 +176,18 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     repository = 'org/repo'
     access_token = 'some-token'
     commit_message = '%s [skip ci]'
-    github_client = setup_mocks(repository, access_token)
+
+    client = stub_github_client
+
+    stub_successful_list_pull_requests_request(
+      client, repository, [
+        pull_request('add feature', 1, 'mergeable_branch'),
+        pull_request('fix bug', 2, 'different_branch')
+      ]
+    )
+    stub_successful_merge_pull_request_request(
+      client, repository, 1, 'add feature [skip ci]'
+    )
 
     define_task(
       argument_names: [:branch_name]
@@ -133,7 +200,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
     Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
 
-    expect(github_client)
+    expect(client)
       .to(have_received(:merge_pull_request)
             .with(repository, 1, 'add feature [skip ci]'))
   end
@@ -141,7 +208,13 @@ describe RakeGithub::Tasks::PullRequests::Merge do
   it 'throws an error if the current branch does not have an associated PR' do
     repository = 'org/repo'
     access_token = 'some-token'
-    setup_mocks(repository, access_token)
+    client = stub_github_client
+    stub_successful_list_pull_requests_request(
+      client, repository, [
+        pull_request('add feature', 1, 'mergeable_branch'),
+        pull_request('fix bug', 2, 'different_branch')
+      ]
+    )
 
     define_task(
       argument_names: [:branch_name]
@@ -151,31 +224,47 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       t.branch_name = args.branch_name
     end
 
-    expect{ Rake::Task['pull_requests:merge'].invoke('branch_with_no_PR') }
-      .to(raise_error(NoPullRequestError, 'No pull request associated with branch branch_with_no_PR'))
+    expect do
+      Rake::Task['pull_requests:merge'].invoke('branch_with_no_PR')
+    end.to(raise_error(
+             NoPullRequestError,
+             'No pull request associated with branch branch_with_no_PR'
+           ))
   end
 
-  def setup_mocks(repo_name, access_token)
-    agent = Sawyer::Agent.new('http://localhost')
-    github_client = double('Github client')
+  def pull_request(title, number, ref)
+    {
+      title: title,
+      number: number,
+      head: {
+        ref: ref
+      }
+    }
+  end
+
+  def stub_github_client
+    client = instance_double(Octokit::Client)
     allow(Octokit::Client)
       .to(receive(:new)
-            .with(hash_including(access_token: access_token))
-            .and_return(github_client))
+            .and_return(client))
+    client
+  end
 
-    allow(github_client)
+  def stub_successful_list_pull_requests_request(
+    client, repository_name, pull_requests
+  )
+    allow(client)
       .to(receive(:pull_requests)
-            .with(repo_name)
-            .and_return([
-              { :title => 'add feature', :number => 1, :head => { :ref => 'mergeable_branch' } },
-              { :title => 'fix bug', :number => 2, :head => { :ref => 'different_branch' } }
-            ]))
+            .with(repository_name)
+            .and_return(pull_requests))
+  end
 
-    allow(github_client)
+  def stub_successful_merge_pull_request_request(
+    client, repository_name, pull_request_number, commit_message
+  )
+    allow(client)
       .to(receive(:merge_pull_request)
-            .and_return(Sawyer::Resource.new(agent, {}))) # TODO
-
-    return github_client
+            .with(repository_name, pull_request_number, commit_message)
+            .and_return({}))
   end
 end
-

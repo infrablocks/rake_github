@@ -1,14 +1,16 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'octokit'
 
 describe RakeGithub::Tasks::Releases::Create do
-  include_context :rake
+  include_context 'rake'
 
   def define_task(opts = {}, &block)
     opts = { namespace: :releases }.merge(opts)
 
     namespace opts[:namespace] do
-      subject.define(opts, &block)
+      described_class.define(opts, &block)
     end
   end
 
@@ -16,17 +18,19 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
-    expect(Rake::Task.task_defined?('releases:create'))
-      .to(be(true))
+    expect(Rake.application)
+      .to(have_task_defined('releases:create'))
   end
 
   it 'gives the create task a description' do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     expect(Rake::Task['releases:create'].full_comment)
       .to(eq('Creates a release on the org/repo repository'))
@@ -35,43 +39,47 @@ describe RakeGithub::Tasks::Releases::Create do
   it 'fails if no repository is provided' do
     define_task(
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
-    expect {
+    expect do
       Rake::Task['releases:create'].invoke
-    }.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
   it 'fails if no access token is provided' do
     define_task(
       repository: 'org/repo',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
-    expect {
+    expect do
       Rake::Task['releases:create'].invoke
-    }.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
   it 'fails if no tag name is provided' do
     define_task(
       repository: 'org/repo',
-      access_token: 'some-token')
+      access_token: 'some-token'
+    )
 
-    expect {
+    expect do
       Rake::Task['releases:create'].invoke
-    }.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeFactory::RequiredParameterUnset)
   end
 
   it 'has no target commitish by default' do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.target_commitish).to(eq(nil))
+    expect(test_task.target_commitish).to(be_nil)
   end
 
   it 'uses the provided target commitish when supplied' do
@@ -81,7 +89,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      target_commitish: target_commitish)
+      target_commitish: target_commitish
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -93,12 +102,13 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.release_name).to(eq(nil))
+    expect(test_task.release_name).to(be_nil)
   end
 
   it 'uses the provided release name when supplied' do
@@ -108,7 +118,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      release_name: release_name)
+      release_name: release_name
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -120,12 +131,13 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.body).to(eq(nil))
+    expect(test_task.body).to(be_nil)
   end
 
   it 'uses the provided body when supplied' do
@@ -135,7 +147,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      body: body)
+      body: body
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -147,12 +160,13 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.draft).to(eq(false))
+    expect(test_task.draft).to(be(false))
   end
 
   it 'uses the provided value for draft when supplied' do
@@ -162,7 +176,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      draft: draft)
+      draft: draft
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -174,12 +189,13 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.prerelease).to(eq(false))
+    expect(test_task.prerelease).to(be(false))
   end
 
   it 'uses the provided value for prerelease when supplied' do
@@ -189,7 +205,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      prerelease: prerelease)
+      prerelease: prerelease
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -201,12 +218,13 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
-    expect(test_task.discussion_category_name).to(eq(nil))
+    expect(test_task.discussion_category_name).to(be_nil)
   end
 
   it 'uses the provided discussion category name when supplied' do
@@ -216,7 +234,8 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      discussion_category_name: discussion_category_name)
+      discussion_category_name: discussion_category_name
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -229,7 +248,8 @@ describe RakeGithub::Tasks::Releases::Create do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      tag_name: '0.1.0')
+      tag_name: '0.1.0'
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
@@ -251,12 +271,54 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      assets: assets)
+      assets: assets
+    )
 
     rake_task = Rake::Task['releases:create']
     test_task = rake_task.creator
 
     expect(test_task.assets).to(eq(assets))
+  end
+
+  it 'uses the provided access token when communicating with Github' do
+    stub_side_effects
+
+    repository = 'org/repo'
+    access_token = 'some-token'
+    tag_name = '0.1.0-rc.1'
+    target_commitish = 'a34de5b'
+    release_name = 'Geronimo'
+    body = 'The long awaited Geronimo release...'
+    draft = true
+    prerelease = true
+    discussion_category_name = 'Prerelease 0.1.0-rc.1'
+    assets = ['path/to/the/file.zip']
+
+    release_url = 'https://api.github.com/repos/org/repo/releases/1'
+
+    client = stub_github_client
+
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
+
+    define_task(
+      repository: repository,
+      access_token: access_token,
+      tag_name: tag_name,
+      target_commitish: target_commitish,
+      release_name: release_name,
+      body: body,
+      draft: draft,
+      prerelease: prerelease,
+      discussion_category_name: discussion_category_name,
+      assets: assets
+    )
+
+    Rake::Task['releases:create'].invoke
+
+    expect(Octokit::Client)
+      .to(have_received(:new)
+            .with(hash_including(access_token: access_token)))
   end
 
   it 'creates the release on the repository' do
@@ -275,21 +337,10 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
@@ -301,7 +352,8 @@ describe RakeGithub::Tasks::Releases::Create do
       draft: draft,
       prerelease: prerelease,
       discussion_category_name: discussion_category_name,
-      assets: assets)
+      assets: assets
+    )
 
     Rake::Task['releases:create'].invoke
 
@@ -325,30 +377,20 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     expected_log_message =
-      "Creating release " \
+      'Creating release ' \
       "with tag '#{tag_name}' " \
       "on '#{repository}' repository...\n"
 
@@ -367,21 +409,10 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
@@ -401,6 +432,7 @@ describe RakeGithub::Tasks::Releases::Create do
     end.to(output(expected_log_message).to_stdout)
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'creates a release that has no assets' do
     stub_side_effects
 
@@ -411,28 +443,17 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .with(repository, tag_name, { draft: false, prerelease: false })
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     Rake::Task['releases:create'].invoke
 
@@ -442,6 +463,7 @@ describe RakeGithub::Tasks::Releases::Create do
     expect(client)
       .not_to(have_received(:upload_asset))
   end
+  # rubocop:enable RSpec/MultipleExpectations
 
   it 'uploads single asset' do
     stub_side_effects
@@ -454,28 +476,17 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .with(repository, tag_name, { draft: false, prerelease: false })
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     Rake::Task['releases:create'].invoke
 
@@ -484,6 +495,7 @@ describe RakeGithub::Tasks::Releases::Create do
             .with(release_url, asset_1_path))
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
   it 'uploads many assets' do
     stub_side_effects
 
@@ -496,28 +508,17 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .with(repository, tag_name, { draft: false, prerelease: false })
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     Rake::Task['releases:create'].invoke
 
@@ -528,6 +529,7 @@ describe RakeGithub::Tasks::Releases::Create do
       .to(have_received(:upload_asset)
             .with(release_url, asset_2_path))
   end
+  # rubocop:enable RSpec/MultipleExpectations
 
   it 'uploads asset with specific name' do
     stub_side_effects
@@ -535,37 +537,26 @@ describe RakeGithub::Tasks::Releases::Create do
     repository = 'org/repo'
     access_token = 'some-token'
     tag_name = '0.1.0-rc.1'
-    asset_name = "someName"
+    asset_name = 'someName'
     asset_1_path = 'path/to/the/file.zip'
     assets = [{
-                path: asset_1_path,
-                name: asset_name
-              }]
+      path: asset_1_path,
+      name: asset_name
+    }]
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .with(repository, tag_name, { draft: false, prerelease: false })
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     Rake::Task['releases:create'].invoke
 
@@ -586,28 +577,17 @@ describe RakeGithub::Tasks::Releases::Create do
 
     release_url = 'https://api.github.com/repos/org/repo/releases/1'
 
-    agent = Sawyer::Agent.new('http://localhost')
-    client = double('Github client')
+    client = stub_github_client
 
-    allow(Octokit::Client)
-      .to(receive(:new)
-            .with(hash_including(
-                    access_token: access_token))
-            .and_return(client))
-
-    allow(client)
-      .to(receive(:create_release)
-            .with(repository, tag_name, { draft: false, prerelease: false })
-            .and_return(
-              Sawyer::Resource.new(agent, { url: release_url })))
-    allow(client)
-      .to(receive(:upload_asset))
+    stub_successful_create_release_request(client, release_url)
+    stub_successful_upload_asset_request(client)
 
     define_task(
       repository: repository,
       access_token: access_token,
       tag_name: tag_name,
-      assets: assets)
+      assets: assets
+    )
 
     expected_log_message1 =
       "Uploading asset '#{asset_1_path}' " \
@@ -623,7 +603,8 @@ describe RakeGithub::Tasks::Releases::Create do
       Rake::Task['releases:create'].invoke
     end.to(
       output(/#{expected_log_message1}\n#{expected_log_message2}/m)
-        .to_stdout)
+        .to_stdout
+    )
   end
 
   def stub_side_effects
@@ -631,10 +612,31 @@ describe RakeGithub::Tasks::Releases::Create do
   end
 
   def stub_output
-    [:print, :puts].each do |method|
-      allow_any_instance_of(Kernel).to(receive(method))
+    %i[print puts].each do |method|
       allow($stdout).to(receive(method))
       allow($stderr).to(receive(method))
     end
+  end
+
+  def stub_github_client
+    client = instance_double(Octokit::Client)
+    allow(Octokit::Client)
+      .to(receive(:new)
+            .and_return(client))
+    client
+  end
+
+  def stub_successful_create_release_request(client, release_url)
+    agent = Sawyer::Agent.new('http://localhost')
+    allow(client)
+      .to(receive(:create_release)
+            .and_return(
+              Sawyer::Resource.new(agent, { url: release_url })
+            ))
+  end
+
+  def stub_successful_upload_asset_request(client)
+    allow(client)
+      .to(receive(:upload_asset))
   end
 end

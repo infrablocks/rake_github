@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rake_factory'
 
 module RakeGithub
@@ -5,10 +7,10 @@ module RakeGithub
     module DeployKeys
       class Ensure < RakeFactory::Task
         default_name :ensure
-        default_description(RakeFactory::DynamicValue.new { |t|
-          "Ensure deploy keys are configured on the " +
-              "#{t.repository} repository"
-        })
+        default_description(RakeFactory::DynamicValue.new do |t|
+          'Ensure deploy keys are configured on the ' \
+            "#{t.repository} repository"
+        end)
 
         parameter :repository, required: true
 

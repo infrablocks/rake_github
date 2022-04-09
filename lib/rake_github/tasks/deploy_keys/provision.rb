@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rake_factory'
 require 'octokit'
 
@@ -6,9 +8,9 @@ module RakeGithub
     module DeployKeys
       class Provision < RakeFactory::Task
         default_name :provision
-        default_description(RakeFactory::DynamicValue.new { |t|
+        default_description(RakeFactory::DynamicValue.new do |t|
           "Provision deploy keys to the #{t.repository} repository"
-        })
+        end)
 
         parameter :repository, required: true
         parameter :access_token, required: true
@@ -17,16 +19,17 @@ module RakeGithub
         action do |t|
           client = Octokit::Client.new(access_token: access_token)
 
-          puts "Adding specified deploy keys to the " +
-              "'#{t.repository}' repository... "
+          $stdout.puts 'Adding specified deploy keys to the ' \
+                       "'#{t.repository}' repository... "
           t.deploy_keys.each do |deploy_key|
-            print "Adding '#{deploy_key[:title]}'... "
+            $stdout.print "Adding '#{deploy_key[:title]}'... "
             client.add_deploy_key(
-                t.repository,
-                deploy_key[:title],
-                deploy_key[:public_key],
-                read_only: !!deploy_key[:read_only])
-            puts "Done."
+              t.repository,
+              deploy_key[:title],
+              deploy_key[:public_key],
+              read_only: !deploy_key[:read_only].nil?
+            )
+            $stdout.puts 'Done.'
           end
         end
       end

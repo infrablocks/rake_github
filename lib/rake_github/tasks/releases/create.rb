@@ -22,50 +22,69 @@ module RakeGithub
         parameter :discussion_category_name
         parameter :assets, default: []
 
-        action do |t|
+        action do |task|
           client = Octokit::Client.new(access_token: access_token)
 
-          release_options = {
-            draft: t.draft,
-            prerelease: t.prerelease
-          }
-          if t.target_commitish
-            release_options[:target_commitish] = t.target_commitish
-          end
-          if t.release_name
-            release_options[:release_name] = t.release_name
-          end
-          if t.body
-            release_options[:body] = t.body
-          end
-          if t.discussion_category_name
-            release_options[:discussion_category_name] =
-              t.discussion_category_name
-          end
+          log_creating_release(task)
+          release = create_release(client, task)
 
-          puts 'Creating release' \
-               "#{t.release_name ? " '#{t.release_name}'" : ''} " \
-               "with tag '#{t.tag_name}' " \
-               "on '#{t.repository}' repository..."
-          release = client.create_release(
-            t.repository,
-            t.tag_name,
-            release_options
+          task.assets.each do |asset|
+            log_uploading_asset(task, asset)
+            upload_asset(client, release, asset)
+          end
+        end
+
+        private
+
+        def log_creating_release(task)
+          $stdout.puts(
+            'Creating release' \
+            "#{task.release_name ? " '#{task.release_name}'" : ''} " \
+            "with tag '#{task.tag_name}' " \
+            "on '#{task.repository}' repository..."
           )
+        end
 
-          t.assets.each do |asset|
-            if asset.is_a?(String)
-              puts "Uploading asset '#{asset}' to release with tag '#{t.tag_name}'..."
-              client.upload_asset(release.url, asset)
-            else
-              puts(
-                "Uploading asset '#{asset[:path]}'" +
-                  "#{asset[:name] ? " with name '#{asset[:name]}'" : ''} " +
-                  "to release with tag '#{t.tag_name}'...")
-              client.upload_asset(
-                release.url, asset[:path], { name: asset[:name] })
-            end
+        def log_uploading_asset(task, asset)
+          if asset.is_a?(String)
+            $stdout
+              .puts("Uploading asset '#{asset}' to release with tag "\
+                    "'#{task.tag_name}'...")
+          else
+            $stdout
+              .puts("Uploading asset '#{asset[:path]}'" \
+                    "#{asset[:name] ? " with name '#{asset[:name]}'" : ''} " \
+                    "to release with tag '#{task.tag_name}'...")
           end
+        end
+
+        def create_release(client, task)
+          client.create_release(
+            task.repository,
+            task.tag_name,
+            release_options(task)
+          )
+        end
+
+        def upload_asset(client, release, asset)
+          if asset.is_a?(String)
+            client.upload_asset(release.url, asset)
+          else
+            client.upload_asset(
+              release.url, asset[:path], { name: asset[:name] }
+            )
+          end
+        end
+
+        def release_options(task)
+          {
+            body: task.body,
+            draft: task.draft,
+            prerelease: task.prerelease,
+            target_commitish: task.target_commitish,
+            release_name: task.release_name,
+            discussion_category_name: task.discussion_category_name
+          }.compact
         end
       end
     end
