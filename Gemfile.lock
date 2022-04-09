@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rake_github (0.10.0.pre.3)
+    rake_github (0.10.0.pre.4)
       colored2 (~> 3.1)
       octokit (~> 4.16)
       rake_factory (~> 0.23)
@@ -150,4 +150,4 @@ DEPENDENCIES
   simplecov
 
 BUNDLED WITH
-   2.3.9
+   2.3.11
