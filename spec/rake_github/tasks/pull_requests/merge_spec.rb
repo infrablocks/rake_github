@@ -33,7 +33,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
     )
 
     expect(Rake::Task['pull_requests:merge'].full_comment)
-      .to(eq('Merges pull request on the specified branch in the org/repo '\
+      .to(eq('Merges pull request on the specified branch in the org/repo ' \
              'repository'))
   end
 
