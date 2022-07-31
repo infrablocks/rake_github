@@ -48,7 +48,7 @@ module RakeGithub
         def log_uploading_asset(task, asset)
           if asset.is_a?(String)
             $stdout
-              .puts("Uploading asset '#{asset}' to release with tag "\
+              .puts("Uploading asset '#{asset}' to release with tag " \
                     "'#{task.tag_name}'...")
           else
             $stdout
