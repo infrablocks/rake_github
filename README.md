@@ -32,7 +32,7 @@ require 'rake_github'
 RakeGithub.define_repository_tasks(
   namespace: :github,
   repository: 'org/repo', # required
-) do |t, args|
+) do |t|
   t.access_token = "your_github_access_token" # required
   t.deploy_keys = [
     {
@@ -40,8 +40,6 @@ RakeGithub.define_repository_tasks(
       public_key: File.read('path/to/your_deploy_key.public')
     }
   ]
-  t.branch_name = args.branch_name
-  t.commit_message = args.commit_message
 end
 ```
 
@@ -55,8 +53,6 @@ end
 | deploy_keys_provision_task_name | symbol | N        | Option to change the provision task name                   | :add                                                   | :provision                           |
 | deploy_keys_ensure_task_name    | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
 | namespace                       | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
-| branch_name                     | string | N        | Branch that can be merged                                  | 'cool_new_feature'                                     | N/A                                  |
-| commit_message                  | string | N        | Merge commit message                                       | 'merged PR using Rake Github'                          | "" (retains original commit message) |
 
 Exposes tasks:
 
