@@ -32,7 +32,7 @@ require 'rake_github'
 RakeGithub.define_repository_tasks(
   namespace: :github,
   repository: 'org/repo', # required
-) do |t, args|
+) do |t|
   t.access_token = "your_github_access_token" # required
   t.deploy_keys = [
     {
@@ -40,25 +40,22 @@ RakeGithub.define_repository_tasks(
       public_key: File.read('path/to/your_deploy_key.public')
     }
   ]
-  t.branch_name = args.branch_name
-  t.commit_message = args.commit_message
 end
 ```
 
 | Parameter                       | Type   | Required | Description                                                | Example                                                | Default                              |
 |---------------------------------|--------|----------|------------------------------------------------------------|--------------------------------------------------------|--------------------------------------|
-| repository                      | string | Y | Repository to perform tasks upon                           | 'organisation/repository_name'                         | N/A                                  |
-| access_token                    | string | Y | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'            | N/A                                  |
-| deploy_keys                     | array  | N | Keys to deploy to repository                               | { title: string, public_key: string, read_only: bool } | [ ]                                  |
-| deploy_keys_namespace           | symbol | N | Namespace to contain deploy keys tasks                     | :deploy_tasks                                          | :deploy_keys                         |
-| deploy_keys_destroy_task_name   | symbol | N | Option to change the destroy task name                     | :obliterate                                            | :destroy                             |
-| deploy_keys_provision_task_name | symbol | N | Option to change the provision task name                   | :add                                                   | :provision                           |
-| deploy_keys_ensure_task_name    | symbol | N | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
-| namespace                       | symbol | N | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
-| branch_name                     | string | N | Branch that can be merged                                  | 'cool_new_feature'                                     | N/A                                  |
-| commit_message                  | string | N | Merge commit message                                       | 'merged PR using Rake Github'                          | "" (retains original commit message) |
+| repository                      | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'                         | N/A                                  |
+| access_token                    | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'            | N/A                                  |
+| deploy_keys                     | array  | N        | Keys to deploy to repository                               | { title: string, public_key: string, read_only: bool } | [ ]                                  |
+| deploy_keys_namespace           | symbol | N        | Namespace to contain deploy keys tasks                     | :deploy_tasks                                          | :deploy_keys                         |
+| deploy_keys_destroy_task_name   | symbol | N        | Option to change the destroy task name                     | :obliterate                                            | :destroy                             |
+| deploy_keys_provision_task_name | symbol | N        | Option to change the provision task name                   | :add                                                   | :provision                           |
+| deploy_keys_ensure_task_name    | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
+| namespace                       | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
 
 Exposes tasks:
+
 ```shell
 $ rake -T
 
@@ -69,18 +66,23 @@ rake github:pull_requests:merge[branch_name,commit_message]
 ```
 
 #### deploy_keys:provision
+
 Provisions deploy keys to the specified repository.
 
 #### deploy_keys:destroy
+
 Destroys deploy keys from the specified repository.
 
 #### deploy_keys:ensure
+
 Destroys and then provisions deploy keys on the specified repository.
 
 #### pull_requests:merge[branch_name,commit_message]
+
 Merges the PR associated with the `branch_name`. Branch name is required.
 
-`commit_message` is optional, and can contain the original commit message with the `%s` placeholder, e.g. `pull_requests:merge[new_feature,"%s [skip ci]"]`.
+`commit_message` is optional, and can contain the original commit message with
+the `%s` placeholder, e.g. `pull_requests:merge[new_feature,"%s [skip ci]"]`.
 
 ### define_release_task
 
@@ -121,13 +123,12 @@ openssl aes-256-cbc \
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at 
-https://github.com/infrablocks/rake_github. This project is intended to be a 
-safe, welcoming space for collaboration, and contributors are expected to 
-adhere to the [Contributor Covenant](http://contributor-covenant.org) code of 
-conduct.
+Bug reports and pull requests are welcome on GitHub at
+https://github.com/infrablocks/rake_github. This project is intended to be a
+safe, welcoming space for collaboration, and contributors are expected to adhere
+to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
-The gem is available as open source under the terms of the 
+The gem is available as open source under the terms of the
 [MIT License](http://opensource.org/licenses/MIT).

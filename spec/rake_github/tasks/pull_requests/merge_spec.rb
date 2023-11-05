@@ -38,11 +38,8 @@ describe RakeGithub::Tasks::PullRequests::Merge do
   end
 
   it 'fails if no repository is provided' do
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.access_token = 'some-token'
-      t.branch_name = args.branch_name
     end
 
     expect do
@@ -51,11 +48,8 @@ describe RakeGithub::Tasks::PullRequests::Merge do
   end
 
   it 'fails if no access token is provided' do
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.repository = 'org/repo'
-      t.branch_name = args.branch_name
     end
 
     expect do
@@ -64,17 +58,14 @@ describe RakeGithub::Tasks::PullRequests::Merge do
   end
 
   it 'fails if no branch_name is provided' do
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.repository = 'org/repo'
       t.access_token = 'some-token'
-      t.branch_name = args.branch_name
     end
 
     expect do
       Rake::Task['pull_requests:merge'].invoke
-    end.to raise_error(RakeFactory::RequiredParameterUnset)
+    end.to raise_error(RakeGithub::Exceptions::RequiredArgumentUnset)
   end
 
   it 'uses provided access token when communicating with Github' do
@@ -93,12 +84,9 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       client, repository, 1, 'add feature'
     )
 
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.repository = repository
       t.access_token = access_token
-      t.branch_name = args.branch_name
     end
 
     Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
@@ -124,12 +112,9 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       client, repository, 1, 'add feature'
     )
 
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t, _args|
       t.repository = repository
       t.access_token = access_token
-      t.branch_name = args.branch_name
     end
 
     Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
@@ -156,16 +141,12 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       client, repository, 1, 'merge PR #1'
     )
 
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.repository = repository
       t.access_token = access_token
-      t.branch_name = args.branch_name
-      t.commit_message = commit_message
     end
 
-    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch', commit_message)
 
     expect(client)
       .to(have_received(:merge_pull_request)
@@ -189,16 +170,12 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       client, repository, 1, 'add feature [skip ci]'
     )
 
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t|
       t.repository = repository
       t.access_token = access_token
-      t.branch_name = args.branch_name
-      t.commit_message = commit_message
     end
 
-    Rake::Task['pull_requests:merge'].invoke('mergeable_branch')
+    Rake::Task['pull_requests:merge'].invoke('mergeable_branch', commit_message)
 
     expect(client)
       .to(have_received(:merge_pull_request)
@@ -216,18 +193,15 @@ describe RakeGithub::Tasks::PullRequests::Merge do
       ]
     )
 
-    define_task(
-      argument_names: [:branch_name]
-    ) do |t, args|
+    define_task do |t, _args|
       t.repository = repository
       t.access_token = access_token
-      t.branch_name = args.branch_name
     end
 
     expect do
       Rake::Task['pull_requests:merge'].invoke('branch_with_no_PR')
     end.to(raise_error(
-             NoPullRequestError,
+             RakeGithub::Exceptions::NoPullRequest,
              'No pull request associated with branch branch_with_no_PR'
            ))
   end
