@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rake_github (0.14.0.pre.1)
+    rake_github (0.14.0.pre.2)
       colored2 (~> 3.1)
       octokit (>= 4.16, < 9.0)
       rake_factory (~> 0.33)
