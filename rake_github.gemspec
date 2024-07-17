@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'colored2', '~> 3.1'
   spec.add_dependency 'octokit', '>= 4.16', '< 9.0'
-  spec.add_dependency 'rake_factory', '~> 0.23'
+  spec.add_dependency 'rake_factory', '~> 0.33'
   spec.add_dependency 'sshkey', '~> 2.0'
 
   spec.add_development_dependency 'activesupport'
