@@ -6,15 +6,15 @@ require 'rake_github/tasks'
 require 'rake_github/task_sets'
 
 module RakeGithub
-  def self.define_deploy_keys_tasks(opts = {}, &block)
-    RakeGithub::TaskSets::DeployKeys.define(opts, &block)
+  def self.define_deploy_keys_tasks(opts = {}, &)
+    RakeGithub::TaskSets::DeployKeys.define(opts, &)
   end
 
-  def self.define_repository_tasks(opts = {}, &block)
-    RakeGithub::TaskSets::Repository.define(opts, &block)
+  def self.define_repository_tasks(opts = {}, &)
+    RakeGithub::TaskSets::Repository.define(opts, &)
   end
 
-  def self.define_release_task(opts = {}, &block)
-    RakeGithub::Tasks::Releases::Create.define(opts, &block)
+  def self.define_release_task(opts = {}, &)
+    RakeGithub::Tasks::Releases::Create.define(opts, &)
   end
 end

@@ -29,7 +29,7 @@ module RakeGithub
           branch_name = resolve_branch_name(args)
           commit_message = resolve_commit_message(args)
 
-          client = Octokit::Client.new(access_token: access_token)
+          client = Octokit::Client.new(access_token:)
 
           open_prs = client.pull_requests(t.repository)
           current_pr = open_prs.find { |pr| pr[:head][:ref] == branch_name }

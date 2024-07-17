@@ -93,7 +93,7 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
     expect(Octokit::Client)
       .to(have_received(:new)
-            .with(hash_including(access_token: access_token)))
+            .with(hash_including(access_token:)))
   end
 
   it 'merges pull request associated with given branch name' do
@@ -208,10 +208,10 @@ describe RakeGithub::Tasks::PullRequests::Merge do
 
   def pull_request(title, number, ref)
     {
-      title: title,
-      number: number,
+      title:,
+      number:,
       head: {
-        ref: ref
+        ref:
       }
     }
   end

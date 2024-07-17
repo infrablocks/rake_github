@@ -82,7 +82,7 @@ describe RakeGithub::Tasks::DeployKeys::Provision do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      deploy_keys: deploy_keys
+      deploy_keys:
     )
 
     rake_task = Rake::Task['deploy_keys:provision']
@@ -106,8 +106,8 @@ describe RakeGithub::Tasks::DeployKeys::Provision do
     allow(client).to(receive(:add_deploy_key))
 
     define_task(
-      repository: repository,
-      access_token: access_token,
+      repository:,
+      access_token:,
       deploy_keys: [
         {
           title: title1,
@@ -126,7 +126,7 @@ describe RakeGithub::Tasks::DeployKeys::Provision do
     expect(Octokit::Client)
       .to(have_received(:new)
             .with(hash_including(
-                    access_token: access_token
+                    access_token:
                   )))
     expect(client)
       .to(have_received(:add_deploy_key)

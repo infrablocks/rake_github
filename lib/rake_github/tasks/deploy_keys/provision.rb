@@ -17,7 +17,7 @@ module RakeGithub
         parameter :deploy_keys, default: []
 
         action do |t|
-          client = Octokit::Client.new(access_token: access_token)
+          client = Octokit::Client.new(access_token:)
 
           $stdout.puts 'Adding specified deploy keys to the ' \
                        "'#{t.repository}' repository... "

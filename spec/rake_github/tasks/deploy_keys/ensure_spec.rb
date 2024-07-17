@@ -52,7 +52,7 @@ describe RakeGithub::Tasks::DeployKeys::Ensure do
     repository = 'org/repo'
 
     define_task(
-      repository: repository,
+      repository:,
       argument_names: %i[thing1 thing2]
     )
 

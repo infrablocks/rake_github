@@ -23,7 +23,7 @@ module RakeGithub
         parameter :assets, default: []
 
         action do |task|
-          client = Octokit::Client.new(access_token: access_token)
+          client = Octokit::Client.new(access_token:)
 
           log_creating_release(task)
           release = create_release(client, task)

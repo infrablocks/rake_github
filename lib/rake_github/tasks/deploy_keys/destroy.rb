@@ -17,7 +17,7 @@ module RakeGithub
         parameter :deploy_keys, default: []
 
         action do |t|
-          client = Octokit::Client.new(access_token: access_token)
+          client = Octokit::Client.new(access_token:)
 
           $stdout.puts 'Removing specified deploy keys from the ' \
                        "'#{t.repository}' repository... "

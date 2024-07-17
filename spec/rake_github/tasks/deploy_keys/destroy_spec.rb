@@ -82,7 +82,7 @@ describe RakeGithub::Tasks::DeployKeys::Destroy do
     define_task(
       repository: 'org/repo',
       access_token: 'some-token',
-      deploy_keys: deploy_keys
+      deploy_keys:
     )
 
     rake_task = Rake::Task['deploy_keys:destroy']
@@ -116,8 +116,8 @@ describe RakeGithub::Tasks::DeployKeys::Destroy do
     stub_successful_remove_deploy_key(client, repository, matching_id2)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
+      repository:,
+      access_token:,
       deploy_keys: [
         deploy_key(matching_title1, 'spec/fixtures/1.public'),
         deploy_key(matching_title2, 'spec/fixtures/2.public')
@@ -128,7 +128,7 @@ describe RakeGithub::Tasks::DeployKeys::Destroy do
 
     expect(Octokit::Client)
       .to(have_received(:new)
-            .with(hash_including(access_token: access_token)))
+            .with(hash_including(access_token:)))
     expect(client)
       .to(have_received(:remove_deploy_key)
             .with(repository, matching_id1))
@@ -140,7 +140,7 @@ describe RakeGithub::Tasks::DeployKeys::Destroy do
 
   def deploy_key(title, public_key_path)
     {
-      title: title,
+      title:,
       public_key: File.read(public_key_path)
     }
   end

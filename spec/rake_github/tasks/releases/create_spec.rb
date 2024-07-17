@@ -89,7 +89,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      target_commitish: target_commitish
+      target_commitish:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -118,7 +118,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      release_name: release_name
+      release_name:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -147,7 +147,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      body: body
+      body:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -176,7 +176,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      draft: draft
+      draft:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -205,7 +205,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      prerelease: prerelease
+      prerelease:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -234,7 +234,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      discussion_category_name: discussion_category_name
+      discussion_category_name:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -271,7 +271,7 @@ describe RakeGithub::Tasks::Releases::Create do
       repository: 'org/repo',
       access_token: 'some-token',
       tag_name: '0.1.0',
-      assets: assets
+      assets:
     )
 
     rake_task = Rake::Task['releases:create']
@@ -302,23 +302,23 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      target_commitish: target_commitish,
-      release_name: release_name,
-      body: body,
-      draft: draft,
-      prerelease: prerelease,
-      discussion_category_name: discussion_category_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      target_commitish:,
+      release_name:,
+      body:,
+      draft:,
+      prerelease:,
+      discussion_category_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
 
     expect(Octokit::Client)
       .to(have_received(:new)
-            .with(hash_including(access_token: access_token)))
+            .with(hash_including(access_token:)))
   end
 
   it 'creates the release on the repository' do
@@ -343,16 +343,16 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      target_commitish: target_commitish,
-      release_name: release_name,
-      body: body,
-      draft: draft,
-      prerelease: prerelease,
-      discussion_category_name: discussion_category_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      target_commitish:,
+      release_name:,
+      body:,
+      draft:,
+      prerelease:,
+      discussion_category_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
@@ -360,12 +360,12 @@ describe RakeGithub::Tasks::Releases::Create do
     expect(client)
       .to(have_received(:create_release)
             .with(repository, tag_name,
-                  target_commitish: target_commitish,
-                  release_name: release_name,
-                  body: body,
-                  draft: draft,
-                  prerelease: prerelease,
-                  discussion_category_name: discussion_category_name))
+                  target_commitish:,
+                  release_name:,
+                  body:,
+                  draft:,
+                  prerelease:,
+                  discussion_category_name:))
   end
 
   it 'logs that the release is being created for a release with no name' do
@@ -383,10 +383,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     expected_log_message =
@@ -415,11 +415,11 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      release_name: release_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      release_name:,
+      assets:
     )
 
     expected_log_message =
@@ -449,10 +449,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
@@ -482,10 +482,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
@@ -514,10 +514,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
@@ -552,10 +552,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     Rake::Task['releases:create'].invoke
@@ -583,10 +583,10 @@ describe RakeGithub::Tasks::Releases::Create do
     stub_successful_upload_asset_request(client)
 
     define_task(
-      repository: repository,
-      access_token: access_token,
-      tag_name: tag_name,
-      assets: assets
+      repository:,
+      access_token:,
+      tag_name:,
+      assets:
     )
 
     expected_log_message1 =

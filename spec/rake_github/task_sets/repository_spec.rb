@@ -68,7 +68,7 @@ describe RakeGithub::TaskSets::Repository do
         repository = 'my-org/my-repo'
 
         define_tasks(
-          repository: repository
+          repository:
         )
 
         rake_task = Rake::Task['deploy_keys:destroy']
@@ -80,7 +80,7 @@ describe RakeGithub::TaskSets::Repository do
         access_token = 'some-access-token'
 
         define_tasks(
-          access_token: access_token
+          access_token:
         )
 
         rake_task = Rake::Task['deploy_keys:destroy']
@@ -118,7 +118,7 @@ describe RakeGithub::TaskSets::Repository do
           }
         ]
         define_tasks(
-          deploy_keys: deploy_keys
+          deploy_keys:
         )
 
         rake_task = Rake::Task['deploy_keys:destroy']
@@ -132,7 +132,7 @@ describe RakeGithub::TaskSets::Repository do
         repository = 'my-org/my-repo'
 
         define_tasks(
-          repository: repository
+          repository:
         )
 
         rake_task = Rake::Task['deploy_keys:provision']
@@ -144,7 +144,7 @@ describe RakeGithub::TaskSets::Repository do
         access_token = 'some-access-token'
 
         define_tasks(
-          access_token: access_token
+          access_token:
         )
 
         rake_task = Rake::Task['deploy_keys:provision']
@@ -182,7 +182,7 @@ describe RakeGithub::TaskSets::Repository do
           }
         ]
         define_tasks(
-          deploy_keys: deploy_keys
+          deploy_keys:
         )
 
         rake_task = Rake::Task['deploy_keys:provision']
@@ -196,7 +196,7 @@ describe RakeGithub::TaskSets::Repository do
         repository = 'my-org/my-repo'
 
         define_tasks(
-          repository: repository
+          repository:
         )
 
         rake_task = Rake::Task['deploy_keys:ensure']
