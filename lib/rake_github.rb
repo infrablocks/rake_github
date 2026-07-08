@@ -10,6 +10,10 @@ module RakeGithub
     RakeGithub::TaskSets::DeployKeys.define(opts, &)
   end
 
+  def self.define_secrets_tasks(opts = {}, &)
+    RakeGithub::TaskSets::Secrets.define(opts, &)
+  end
+
   def self.define_repository_tasks(opts = {}, &)
     RakeGithub::TaskSets::Repository.define(opts, &)
   end
