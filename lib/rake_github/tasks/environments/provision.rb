@@ -45,7 +45,7 @@ module RakeGithub
         end
 
         def resolve_reviewers(client, org, reviewers)
-          return nil if reviewers.nil?
+          return nil if reviewers.nil? || reviewers.empty?
 
           reviewers.map { |reviewer| resolve_reviewer(client, org, reviewer) }
         end

@@ -267,6 +267,24 @@ describe RakeGithub::Tasks::Environments::Provision do
             .with(repository, 'release', {}))
   end
 
+  it 'omits reviewers when an empty array is supplied' do
+    repository = 'org/repo'
+
+    client = stub_github_client
+
+    define_task(
+      repository:,
+      access_token: 'some-token',
+      environments: [{ name: 'release', reviewers: [] }]
+    )
+
+    Rake::Task['environments:provision'].invoke
+
+    expect(client)
+      .to(have_received(:create_or_update_environment)
+            .with(repository, 'release', {}))
+  end
+
   it 'retains falsy optional values such as wait_timer zero' do
     repository = 'org/repo'
 
