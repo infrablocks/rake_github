@@ -14,6 +14,10 @@ module RakeGithub
     RakeGithub::TaskSets::Secrets.define(opts, &)
   end
 
+  def self.define_environments_tasks(opts = {}, &)
+    RakeGithub::TaskSets::Environments.define(opts, &)
+  end
+
   def self.define_repository_tasks(opts = {}, &)
     RakeGithub::TaskSets::Repository.define(opts, &)
   end
