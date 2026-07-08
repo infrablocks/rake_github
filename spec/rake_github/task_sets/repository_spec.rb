@@ -23,6 +23,9 @@ describe RakeGithub::TaskSets::Repository do
             %w[github:deploy_keys:provision
                github:deploy_keys:destroy
                github:deploy_keys:ensure
+               github:secrets:provision
+               github:secrets:destroy
+               github:secrets:ensure
                github:pull_requests:merge]
           ))
   end
@@ -35,6 +38,9 @@ describe RakeGithub::TaskSets::Repository do
             %w[deploy_keys:provision
                deploy_keys:destroy
                deploy_keys:ensure
+               secrets:provision
+               secrets:destroy
+               secrets:ensure
                pull_requests:merge]
           ))
   end
@@ -249,6 +255,217 @@ describe RakeGithub::TaskSets::Repository do
         define_tasks(deploy_keys_provision_task_name: :provision_some_things)
 
         rake_task = Rake::Task['deploy_keys:ensure']
+
+        expect(rake_task.creator.provision_task_name)
+          .to(eq(:provision_some_things))
+      end
+    end
+  end
+
+  describe 'secrets tasks' do
+    it 'adds all secrets tasks in the provided namespace when supplied' do
+      define_tasks(secrets_namespace: :repository_secrets)
+
+      expect(Rake.application)
+        .to(have_tasks_defined(
+              %w[repository_secrets:provision
+                 repository_secrets:destroy
+                 repository_secrets:ensure]
+            ))
+    end
+
+    it 'adds all secrets tasks in the secrets namespace when none ' \
+       'supplied' do
+      define_tasks
+
+      expect(Rake.application)
+        .to(have_tasks_defined(
+              %w[secrets:provision
+                 secrets:destroy
+                 secrets:ensure]
+            ))
+    end
+
+    describe 'destroy task' do
+      it 'configures with the provided repository' do
+        repository = 'my-org/my-repo'
+
+        define_tasks(
+          repository:
+        )
+
+        rake_task = Rake::Task['secrets:destroy']
+
+        expect(rake_task.creator.repository).to(eq(repository))
+      end
+
+      it 'configures with the provided access token' do
+        access_token = 'some-access-token'
+
+        define_tasks(
+          access_token:
+        )
+
+        rake_task = Rake::Task['secrets:destroy']
+
+        expect(rake_task.creator.access_token).to(eq(access_token))
+      end
+
+      it 'uses a name of destroy by default' do
+        define_tasks
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:destroy'))
+      end
+
+      it 'uses the provided name when supplied' do
+        define_tasks(secrets_destroy_task_name: :destroy_it_all)
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:destroy_it_all'))
+      end
+
+      it 'has no secrets by default' do
+        define_tasks
+
+        rake_task = Rake::Task['secrets:destroy']
+
+        expect(rake_task.creator.secrets).to(eq([]))
+      end
+
+      it 'uses the provided secrets when supplied' do
+        secrets = [
+          { name: 'SOME_SECRET', value: 'some-value' }
+        ]
+        define_tasks(
+          secrets:
+        )
+
+        rake_task = Rake::Task['secrets:destroy']
+
+        expect(rake_task.creator.secrets).to(eq(secrets))
+      end
+    end
+
+    describe 'provision task' do
+      it 'configures with the provided repository' do
+        repository = 'my-org/my-repo'
+
+        define_tasks(
+          repository:
+        )
+
+        rake_task = Rake::Task['secrets:provision']
+
+        expect(rake_task.creator.repository).to(eq(repository))
+      end
+
+      it 'configures with the provided access token' do
+        access_token = 'some-access-token'
+
+        define_tasks(
+          access_token:
+        )
+
+        rake_task = Rake::Task['secrets:provision']
+
+        expect(rake_task.creator.access_token).to(eq(access_token))
+      end
+
+      it 'uses a name of provision by default' do
+        define_tasks
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:provision'))
+      end
+
+      it 'uses the provided name when supplied' do
+        define_tasks(secrets_provision_task_name: :provision_things)
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:provision_things'))
+      end
+
+      it 'has no secrets by default' do
+        define_tasks
+
+        rake_task = Rake::Task['secrets:provision']
+
+        expect(rake_task.creator.secrets).to(eq([]))
+      end
+
+      it 'uses the provided secrets when supplied' do
+        secrets = [
+          { name: 'SOME_SECRET', value: 'some-value' }
+        ]
+        define_tasks(
+          secrets:
+        )
+
+        rake_task = Rake::Task['secrets:provision']
+
+        expect(rake_task.creator.secrets).to(eq(secrets))
+      end
+    end
+
+    describe 'ensure task' do
+      it 'configures with the provided repository' do
+        repository = 'my-org/my-repo'
+
+        define_tasks(
+          repository:
+        )
+
+        rake_task = Rake::Task['secrets:ensure']
+
+        expect(rake_task.creator.repository).to(eq(repository))
+      end
+
+      it 'uses a name of ensure by default' do
+        define_tasks
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:ensure'))
+      end
+
+      it 'uses the provided name when supplied' do
+        define_tasks(secrets_ensure_task_name: :make_sure)
+
+        expect(Rake.application)
+          .to(have_task_defined('secrets:make_sure'))
+      end
+
+      it 'uses a destroy task name of destroy by default' do
+        define_tasks
+
+        rake_task = Rake::Task['secrets:ensure']
+
+        expect(rake_task.creator.destroy_task_name)
+          .to(eq(:destroy))
+      end
+
+      it 'uses the provided destroy task name when supplied' do
+        define_tasks(secrets_destroy_task_name: :destroy_it_all)
+
+        rake_task = Rake::Task['secrets:ensure']
+
+        expect(rake_task.creator.destroy_task_name)
+          .to(eq(:destroy_it_all))
+      end
+
+      it 'uses a provision task name of provision by default' do
+        define_tasks
+
+        rake_task = Rake::Task['secrets:ensure']
+
+        expect(rake_task.creator.provision_task_name)
+          .to(eq(:provision))
+      end
+
+      it 'uses the provided provision task name when supplied' do
+        define_tasks(secrets_provision_task_name: :provision_some_things)
+
+        rake_task = Rake::Task['secrets:ensure']
 
         expect(rake_task.creator.provision_task_name)
           .to(eq(:provision_some_things))
