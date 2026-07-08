@@ -4,7 +4,7 @@ orbs:
   slack: circleci/slack@4.13.2
 
 base_container: &base_container
-  image: buildpack-deps:buster
+  image: buildpack-deps:bookworm
 
 build_container: &build_container
   resource_class: arm.medium
@@ -69,15 +69,16 @@ commands:
   configure_build_tools:
     steps:
       - run: ./scripts/ci/common/install-slack-deps.sh
+      - run: ./scripts/ci/common/install-libsodium.sh
       - restore_cache:
           keys:
-            - asdf-dependencies-{{ arch }}-v2-{{ checksum ".tool-versions" }}
-            - asdf-dependencies-{{ arch }}-v2-
+            - asdf-dependencies-{{ arch }}-v3-{{ checksum ".tool-versions" }}
+            - asdf-dependencies-{{ arch }}-v3-
       - run: ./scripts/ci/common/install-asdf.sh
       - run: ./scripts/ci/common/configure-asdf.sh
       - run: ./scripts/ci/common/install-asdf-dependencies.sh
       - save_cache:
-          key: asdf-dependencies-{{ arch }}-v2-{{ checksum ".tool-versions" }}
+          key: asdf-dependencies-{{ arch }}-v3-{{ checksum ".tool-versions" }}
           paths:
             - ~/.asdf
 
