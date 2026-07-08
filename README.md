@@ -18,6 +18,21 @@ Or install it yourself as:
 
     $ gem install rake_github
 
+### System dependencies
+
+The `secrets` task group encrypts secrets client-side using `rbnacl`, which
+requires the native [libsodium](https://libsodium.org) library to be present on
+the host. Install it before running any `secrets` task:
+
+    # macOS
+    $ brew install libsodium
+
+    # Debian/Ubuntu
+    $ apt-get install libsodium23
+
+libsodium is only required when using the `secrets` tasks; the other task groups
+have no additional system dependencies.
+
 ## Usage
 
 ### define_deploy_keys_tasks
@@ -52,7 +67,7 @@ end
 | deploy_keys_destroy_task_name   | symbol | N        | Option to change the destroy task name                     | :obliterate                                            | :destroy                             |
 | deploy_keys_provision_task_name | symbol | N        | Option to change the provision task name                   | :add                                                   | :provision                           |
 | deploy_keys_ensure_task_name    | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
-| secrets                         | array  | N        | Secrets to provision on the repository                     | { name: string, value: string }                       | [ ]                                  |
+| secrets                         | array  | N        | Secrets to provision on the repository                     | { name: string, value: string, dependabot: bool }     | [ ]                                  |
 | secrets_namespace               | symbol | N        | Namespace to contain secrets tasks                         | :repository_secrets                                    | :secrets                             |
 | secrets_destroy_task_name       | symbol | N        | Option to change the secrets destroy task name             | :obliterate                                            | :destroy                             |
 | secrets_provision_task_name     | symbol | N        | Option to change the secrets provision task name           | :add                                                   | :provision                           |
@@ -103,9 +118,13 @@ the `%s` placeholder, e.g. `pull_requests:merge[new_feature,"%s [skip ci]"]`.
 ### define_secrets_tasks
 
 Sets up rake tasks for managing repository secrets. Each secret is written to
-both the Actions and Dependabot secret stores, so that Dependabot-triggered
-workflow runs can read them. Secrets are encrypted client-side before being
-sent to GitHub.
+the Actions secret store by default. A secret can additionally be written to the
+Dependabot secret store by setting `dependabot: true`, so that
+Dependabot-triggered workflow runs can read the secrets they need. Secrets are
+encrypted client-side before being sent to GitHub.
+
+These tasks require the native libsodium library to be installed on the host —
+see [System dependencies](#system-dependencies) above.
 
 ```ruby
 require 'rake_github'
@@ -119,6 +138,11 @@ RakeGithub.define_secrets_tasks(
     {
       name: 'SOME_SECRET',
       value: 'some-plaintext-value'
+    },
+    {
+      name: 'SHARED_SECRET',
+      value: 'another-plaintext-value',
+      dependabot: true # also write to the Dependabot store
     }
   ]
 end
@@ -128,7 +152,7 @@ end
 |----------------------|--------|----------|------------------------------------------------------------|---------------------------------------------|------------|
 | repository           | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'              | N/A        |
 | access_token         | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' | N/A        |
-| secrets              | array  | N        | Secrets to provision on the repository                     | { name: string, value: string }            | [ ]        |
+| secrets              | array  | N        | Secrets to provision on the repository                     | { name: string, value: string, dependabot: bool } | [ ]        |
 | destroy_task_name    | symbol | N        | Option to change the destroy task name                     | :obliterate                                 | :destroy   |
 | provision_task_name  | symbol | N        | Option to change the provision task name                   | :add                                        | :provision |
 | ensure_task_name     | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                      | :ensure    |
@@ -146,8 +170,9 @@ rake secrets:provision
 
 #### secrets:provision
 
-Provisions the specified secrets to the repository, writing each one to both
-the Actions and Dependabot secret stores.
+Provisions the specified secrets to the repository, writing each one to the
+Actions secret store and, for secrets marked `dependabot: true`, also to the
+Dependabot secret store.
 
 #### secrets:destroy
 
@@ -220,7 +245,10 @@ and user reviewers to their numeric ids.
 
 #### environments:destroy
 
-Destroys the specified environments from the repository.
+Destroys the specified environments from the repository. This is irreversible
+and also discards each environment's protection rules, environment secrets and
+deployment history. `environments:ensure` therefore fully recreates each
+environment rather than patching it in place.
 
 #### environments:ensure
 

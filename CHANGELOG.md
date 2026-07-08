@@ -12,8 +12,9 @@ and this project adheres to
 
 * New `secrets` task group, defined via `RakeGithub.define_secrets_tasks`, for
   managing GitHub repository secrets. It exposes `provision`, `destroy` and
-  `ensure` tasks. Each secret is written to both the Actions and Dependabot
-  secret stores so that Dependabot-triggered workflow runs can read them.
+  `ensure` tasks. Each secret is written to the Actions secret store, and
+  additionally to the Dependabot secret store when it sets `dependabot: true`,
+  so that Dependabot-triggered workflow runs can read the secrets they need.
 
   Secrets are supplied as an array of hashes, e.g.
   `[{ name: 'SOME_SECRET', value: 'plaintext' }]`, and are encrypted
@@ -39,6 +40,14 @@ and this project adheres to
 
 * The `pull_requests:merge` task no longer requires setting the branch name and
   commit message provide via arguments as parameters within the task definition.
+* The `octokit` dependency lower bound has been raised from `>= 4.16` to
+  `>= 7.0`, as the Dependabot secret methods used by the `secrets` task group
+  were introduced in octokit 7.0. Consumers pinning octokit below 7.0 will need
+  to relax that constraint.
+* Added a new runtime dependency on `rbnacl` (`~> 7.1`), used to encrypt
+  secrets client-side. `rbnacl` requires the native libsodium library to be
+  installed on the host (see the Installation section of the README); this is
+  only needed when using the `secrets` task group.
 
 ## [0.9.0] 2022-01-28
 
