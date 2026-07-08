@@ -116,6 +116,69 @@ describe RakeGithub::Tasks::Secrets::Provision do
   end
   # rubocop:enable RSpec/MultipleExpectations
 
+  it 'does not write to the dependabot store by default' do
+    repository = 'org/repo'
+
+    client = stub_github_client
+
+    define_task(
+      repository:,
+      access_token: 'some-token',
+      secrets: [{ name: 'SOME_SECRET', value: 'some-value' }]
+    )
+
+    Rake::Task['secrets:provision'].invoke
+
+    expect(client)
+      .not_to(have_received(:create_or_update_dependabot_secret))
+  end
+
+  it 'does not fetch the dependabot public key when no secret opts in' do
+    client = stub_github_client
+
+    define_task(
+      repository: 'org/repo',
+      access_token: 'some-token',
+      secrets: [{ name: 'SOME_SECRET', value: 'some-value' }]
+    )
+
+    Rake::Task['secrets:provision'].invoke
+
+    expect(client).not_to(have_received(:get_dependabot_public_key))
+  end
+
+  # rubocop:disable RSpec/MultipleExpectations
+  it 'writes every secret to actions but only opted-in secrets to dependabot' do
+    repository = 'org/repo'
+
+    client = stub_github_client
+
+    define_task(
+      repository:,
+      access_token: 'some-token',
+      secrets: [
+        { name: 'ACTIONS_ONLY', value: 'value-one' },
+        { name: 'BOTH', value: 'value-two', dependabot: true }
+      ]
+    )
+
+    Rake::Task['secrets:provision'].invoke
+
+    expect(client)
+      .to(have_received(:create_or_update_actions_secret)
+            .with(repository, 'ACTIONS_ONLY', anything))
+    expect(client)
+      .to(have_received(:create_or_update_actions_secret)
+            .with(repository, 'BOTH', anything))
+    expect(client)
+      .to(have_received(:create_or_update_dependabot_secret)
+            .with(repository, 'BOTH', anything))
+    expect(client)
+      .not_to(have_received(:create_or_update_dependabot_secret)
+                .with(repository, 'ACTIONS_ONLY', anything))
+  end
+  # rubocop:enable RSpec/MultipleExpectations
+
   it 'creates or updates the dependabot secret with a sealed value' do
     repository = 'org/repo'
     access_token = 'some-token'
@@ -129,7 +192,7 @@ describe RakeGithub::Tasks::Secrets::Provision do
     define_task(
       repository:,
       access_token:,
-      secrets: [{ name: 'SOME_SECRET', value: 'some-value' }]
+      secrets: [{ name: 'SOME_SECRET', value: 'some-value', dependabot: true }]
     )
 
     Rake::Task['secrets:provision'].invoke
@@ -155,7 +218,7 @@ describe RakeGithub::Tasks::Secrets::Provision do
     define_task(
       repository:,
       access_token: 'some-token',
-      secrets: [{ name: 'SOME_SECRET', value: 'some-value' }]
+      secrets: [{ name: 'SOME_SECRET', value: 'some-value', dependabot: true }]
     )
 
     Rake::Task['secrets:provision'].invoke
@@ -192,6 +255,29 @@ describe RakeGithub::Tasks::Secrets::Provision do
                   hash_including(key_id: 'actions-key-id')))
   end
 
+  it 'passes the fetched key id to the dependabot secret' do
+    repository = 'org/repo'
+    private_key = RbNaCl::PrivateKey.generate
+
+    client = stub_github_client
+    stub_dependabot_public_key(
+      client, repository, 'dependabot-key-id', private_key
+    )
+
+    define_task(
+      repository:,
+      access_token: 'some-token',
+      secrets: [{ name: 'SOME_SECRET', value: 'some-value', dependabot: true }]
+    )
+
+    Rake::Task['secrets:provision'].invoke
+
+    expect(client)
+      .to(have_received(:create_or_update_dependabot_secret)
+            .with(repository, 'SOME_SECRET',
+                  hash_including(key_id: 'dependabot-key-id')))
+  end
+
   # rubocop:disable RSpec/MultipleExpectations
   it 'fetches each public key once per run rather than per secret' do
     repository = 'org/repo'
@@ -207,8 +293,8 @@ describe RakeGithub::Tasks::Secrets::Provision do
       repository:,
       access_token: 'some-token',
       secrets: [
-        { name: 'SECRET_ONE', value: 'value-one' },
-        { name: 'SECRET_TWO', value: 'value-two' }
+        { name: 'SECRET_ONE', value: 'value-one', dependabot: true },
+        { name: 'SECRET_TWO', value: 'value-two', dependabot: true }
       ]
     )
 

@@ -42,16 +42,23 @@ module RakeGithub
         end
 
         def provision_dependabot_secrets(client, task)
+          secrets = task.secrets.select { |secret| secret[:dependabot] }
+          return if secrets.empty?
+
           public_key = client.get_dependabot_public_key(task.repository)
-          task.secrets.each do |secret|
-            $stdout.print "Adding '#{secret[:name]}' to Dependabot... "
-            client.create_or_update_dependabot_secret(
-              task.repository,
-              secret[:name],
-              secret_options(public_key, secret[:value])
-            )
-            $stdout.puts 'Done.'
+          secrets.each do |secret|
+            write_dependabot_secret(client, task, public_key, secret)
           end
+        end
+
+        def write_dependabot_secret(client, task, public_key, secret)
+          $stdout.print "Adding '#{secret[:name]}' to Dependabot... "
+          client.create_or_update_dependabot_secret(
+            task.repository,
+            secret[:name],
+            secret_options(public_key, secret[:value])
+          )
+          $stdout.puts 'Done.'
         end
 
         def secret_options(public_key, value)
