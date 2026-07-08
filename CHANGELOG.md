@@ -8,6 +8,20 @@ and this project adheres to
 
 ## Unreleased
 
+### Added
+
+* New `secrets` task group, defined via `RakeGithub.define_secrets_tasks`, for
+  managing GitHub repository secrets. It exposes `provision`, `destroy` and
+  `ensure` tasks. Each secret is written to both the Actions and Dependabot
+  secret stores so that Dependabot-triggered workflow runs can read them.
+
+  Secrets are supplied as an array of hashes, e.g.
+  `[{ name: 'SOME_SECRET', value: 'plaintext' }]`, and are encrypted
+  client-side before being sent to GitHub.
+
+* The `secrets` task group is also included in the tasks defined by
+  `RakeGithub.define_repository_tasks`.
+
 ### Changed
 
 * The `pull_requests:merge` task no longer requires setting the branch name and

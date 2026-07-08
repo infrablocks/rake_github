@@ -52,6 +52,11 @@ end
 | deploy_keys_destroy_task_name   | symbol | N        | Option to change the destroy task name                     | :obliterate                                            | :destroy                             |
 | deploy_keys_provision_task_name | symbol | N        | Option to change the provision task name                   | :add                                                   | :provision                           |
 | deploy_keys_ensure_task_name    | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
+| secrets                         | array  | N        | Secrets to provision on the repository                     | { name: string, value: string }                       | [ ]                                  |
+| secrets_namespace               | symbol | N        | Namespace to contain secrets tasks                         | :repository_secrets                                    | :secrets                             |
+| secrets_destroy_task_name       | symbol | N        | Option to change the secrets destroy task name             | :obliterate                                            | :destroy                             |
+| secrets_provision_task_name     | symbol | N        | Option to change the secrets provision task name           | :add                                                   | :provision                           |
+| secrets_ensure_task_name        | symbol | N        | Option to change the secrets ensure task name              | :destroy_and_provision                                 | :ensure                              |
 | namespace                       | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
 
 Exposes tasks:
@@ -62,6 +67,9 @@ $ rake -T
 rake github:deploy_keys:destroy
 rake github:deploy_keys:ensure
 rake github:deploy_keys:provision
+rake github:secrets:destroy
+rake github:secrets:ensure
+rake github:secrets:provision
 rake github:pull_requests:merge[branch_name,commit_message]
 ```
 
@@ -83,6 +91,64 @@ Merges the PR associated with the `branch_name`. Branch name is required.
 
 `commit_message` is optional, and can contain the original commit message with
 the `%s` placeholder, e.g. `pull_requests:merge[new_feature,"%s [skip ci]"]`.
+
+### define_secrets_tasks
+
+Sets up rake tasks for managing repository secrets. Each secret is written to
+both the Actions and Dependabot secret stores, so that Dependabot-triggered
+workflow runs can read them. Secrets are encrypted client-side before being
+sent to GitHub.
+
+```ruby
+require 'rake_github'
+
+RakeGithub.define_secrets_tasks(
+  namespace: :secrets,
+  repository: 'org/repo', # required
+) do |t|
+  t.access_token = "your_github_access_token" # required
+  t.secrets = [
+    {
+      name: 'SOME_SECRET',
+      value: 'some-plaintext-value'
+    }
+  ]
+end
+```
+
+| Parameter            | Type   | Required | Description                                                | Example                                     | Default    |
+|----------------------|--------|----------|------------------------------------------------------------|---------------------------------------------|------------|
+| repository           | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'              | N/A        |
+| access_token         | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' | N/A        |
+| secrets              | array  | N        | Secrets to provision on the repository                     | { name: string, value: string }            | [ ]        |
+| destroy_task_name    | symbol | N        | Option to change the destroy task name                     | :obliterate                                 | :destroy   |
+| provision_task_name  | symbol | N        | Option to change the provision task name                   | :add                                        | :provision |
+| ensure_task_name     | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                      | :ensure    |
+| namespace            | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :secrets                                    | N/A        |
+
+Exposes tasks:
+
+```shell
+$ rake -T
+
+rake secrets:destroy
+rake secrets:ensure
+rake secrets:provision
+```
+
+#### secrets:provision
+
+Provisions the specified secrets to the repository, writing each one to both
+the Actions and Dependabot secret stores.
+
+#### secrets:destroy
+
+Destroys the specified secrets from the repository, removing each one from both
+the Actions and Dependabot secret stores.
+
+#### secrets:ensure
+
+Destroys and then provisions the specified secrets on the repository.
 
 ### define_release_task
 
