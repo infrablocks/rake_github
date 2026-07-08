@@ -18,6 +18,21 @@ Or install it yourself as:
 
     $ gem install rake_github
 
+### System dependencies
+
+The `secrets` task group encrypts secrets client-side using `rbnacl`, which
+requires the native [libsodium](https://libsodium.org) library to be present on
+the host. Install it before running any `secrets` task:
+
+    # macOS
+    $ brew install libsodium
+
+    # Debian/Ubuntu
+    $ apt-get install libsodium23
+
+libsodium is only required when using the `secrets` tasks; the other task groups
+have no additional system dependencies.
+
 ## Usage
 
 ### define_deploy_keys_tasks
@@ -52,6 +67,16 @@ end
 | deploy_keys_destroy_task_name   | symbol | N        | Option to change the destroy task name                     | :obliterate                                            | :destroy                             |
 | deploy_keys_provision_task_name | symbol | N        | Option to change the provision task name                   | :add                                                   | :provision                           |
 | deploy_keys_ensure_task_name    | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                                 | :ensure                              |
+| secrets                         | array  | N        | Secrets to provision on the repository                     | { name: string, value: string, dependabot: bool }     | [ ]                                  |
+| secrets_namespace               | symbol | N        | Namespace to contain secrets tasks                         | :repository_secrets                                    | :secrets                             |
+| secrets_destroy_task_name       | symbol | N        | Option to change the secrets destroy task name             | :obliterate                                            | :destroy                             |
+| secrets_provision_task_name     | symbol | N        | Option to change the secrets provision task name           | :add                                                   | :provision                           |
+| secrets_ensure_task_name        | symbol | N        | Option to change the secrets ensure task name              | :destroy_and_provision                                 | :ensure                              |
+| environments                    | array  | N        | Environments to provision on the repository                | { name: string, reviewers: array }                     | [ ]                                  |
+| environments_namespace          | symbol | N        | Namespace to contain environments tasks                    | :repository_environments                               | :environments                        |
+| environments_destroy_task_name  | symbol | N        | Option to change the environments destroy task name        | :obliterate                                            | :destroy                             |
+| environments_provision_task_name| symbol | N        | Option to change the environments provision task name      | :add                                                   | :provision                           |
+| environments_ensure_task_name   | symbol | N        | Option to change the environments ensure task name         | :destroy_and_provision                                 | :ensure                              |
 | namespace                       | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
 
 Exposes tasks:
@@ -62,6 +87,12 @@ $ rake -T
 rake github:deploy_keys:destroy
 rake github:deploy_keys:ensure
 rake github:deploy_keys:provision
+rake github:secrets:destroy
+rake github:secrets:ensure
+rake github:secrets:provision
+rake github:environments:destroy
+rake github:environments:ensure
+rake github:environments:provision
 rake github:pull_requests:merge[branch_name,commit_message]
 ```
 
@@ -83,6 +114,145 @@ Merges the PR associated with the `branch_name`. Branch name is required.
 
 `commit_message` is optional, and can contain the original commit message with
 the `%s` placeholder, e.g. `pull_requests:merge[new_feature,"%s [skip ci]"]`.
+
+### define_secrets_tasks
+
+Sets up rake tasks for managing repository secrets. Each secret is written to
+the Actions secret store by default. A secret can additionally be written to the
+Dependabot secret store by setting `dependabot: true`, so that
+Dependabot-triggered workflow runs can read the secrets they need. Secrets are
+encrypted client-side before being sent to GitHub.
+
+These tasks require the native libsodium library to be installed on the host —
+see [System dependencies](#system-dependencies) above.
+
+```ruby
+require 'rake_github'
+
+RakeGithub.define_secrets_tasks(
+  namespace: :secrets,
+  repository: 'org/repo', # required
+) do |t|
+  t.access_token = "your_github_access_token" # required
+  t.secrets = [
+    {
+      name: 'SOME_SECRET',
+      value: 'some-plaintext-value'
+    },
+    {
+      name: 'SHARED_SECRET',
+      value: 'another-plaintext-value',
+      dependabot: true # also write to the Dependabot store
+    }
+  ]
+end
+```
+
+| Parameter            | Type   | Required | Description                                                | Example                                     | Default    |
+|----------------------|--------|----------|------------------------------------------------------------|---------------------------------------------|------------|
+| repository           | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'              | N/A        |
+| access_token         | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' | N/A        |
+| secrets              | array  | N        | Secrets to provision on the repository                     | { name: string, value: string, dependabot: bool } | [ ]        |
+| destroy_task_name    | symbol | N        | Option to change the destroy task name                     | :obliterate                                 | :destroy   |
+| provision_task_name  | symbol | N        | Option to change the provision task name                   | :add                                        | :provision |
+| ensure_task_name     | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                      | :ensure    |
+| namespace            | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :secrets                                    | N/A        |
+
+Exposes tasks:
+
+```shell
+$ rake -T
+
+rake secrets:destroy
+rake secrets:ensure
+rake secrets:provision
+```
+
+#### secrets:provision
+
+Provisions the specified secrets to the repository, writing each one to the
+Actions secret store and, for secrets marked `dependabot: true`, also to the
+Dependabot secret store.
+
+#### secrets:destroy
+
+Destroys the specified secrets from the repository, removing each one from both
+the Actions and Dependabot secret stores.
+
+#### secrets:ensure
+
+Destroys and then provisions the specified secrets on the repository.
+
+### define_environments_tasks
+
+Sets up rake tasks for managing GitHub deployment environments, including
+protection rules such as required reviewers. Team and user reviewers are
+resolved to their numeric ids before being sent to GitHub.
+
+```ruby
+require 'rake_github'
+
+RakeGithub.define_environments_tasks(
+  namespace: :environments,
+  repository: 'org/repo', # required
+) do |t|
+  t.access_token = "your_github_access_token" # required
+  t.environments = [
+    {
+      name: 'release',
+      wait_timer: 0,
+      prevent_self_review: false,
+      reviewers: [
+        { team: 'maintainers' },
+        { user: 'someone' }
+      ],
+      deployment_branch_policy: {
+        protected_branches: true,
+        custom_branch_policies: false
+      }
+    }
+  ]
+end
+```
+
+Only `name` is required for each environment; every other key is optional and
+is omitted from the GitHub API payload when absent.
+
+| Parameter            | Type   | Required | Description                                                | Example                                     | Default        |
+|----------------------|--------|----------|------------------------------------------------------------|---------------------------------------------|----------------|
+| repository           | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'              | N/A            |
+| access_token         | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' | N/A            |
+| environments         | array  | N        | Environments to provision on the repository                | { name: string, reviewers: array }          | [ ]            |
+| destroy_task_name    | symbol | N        | Option to change the destroy task name                     | :obliterate                                 | :destroy       |
+| provision_task_name  | symbol | N        | Option to change the provision task name                   | :add                                        | :provision     |
+| ensure_task_name     | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                      | :ensure        |
+| namespace            | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :environments                               | N/A            |
+
+Exposes tasks:
+
+```shell
+$ rake -T
+
+rake environments:destroy
+rake environments:ensure
+rake environments:provision
+```
+
+#### environments:provision
+
+Provisions the specified environments on the repository, resolving any team
+and user reviewers to their numeric ids.
+
+#### environments:destroy
+
+Destroys the specified environments from the repository. This is irreversible
+and also discards each environment's protection rules, environment secrets and
+deployment history. `environments:ensure` therefore fully recreates each
+environment rather than patching it in place.
+
+#### environments:ensure
+
+Destroys and then provisions the specified environments on the repository.
 
 ### define_release_task
 

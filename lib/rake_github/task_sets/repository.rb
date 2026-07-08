@@ -12,11 +12,23 @@ module RakeGithub
       parameter :repository, required: true
       parameter :access_token, required: true
       parameter :deploy_keys, default: []
+      parameter :secrets, default: []
+      parameter :environments, default: []
 
       parameter :deploy_keys_namespace, default: :deploy_keys
       parameter :deploy_keys_destroy_task_name, default: :destroy
       parameter :deploy_keys_provision_task_name, default: :provision
       parameter :deploy_keys_ensure_task_name, default: :ensure
+
+      parameter :secrets_namespace, default: :secrets
+      parameter :secrets_destroy_task_name, default: :destroy
+      parameter :secrets_provision_task_name, default: :provision
+      parameter :secrets_ensure_task_name, default: :ensure
+
+      parameter :environments_namespace, default: :environments
+      parameter :environments_destroy_task_name, default: :destroy
+      parameter :environments_provision_task_name, default: :provision
+      parameter :environments_ensure_task_name, default: :ensure
 
       task Tasks::DeployKeys::Provision,
            name: RakeFactory::DynamicValue.new { |ts|
@@ -35,6 +47,42 @@ module RakeGithub
            },
            destroy_task_name: RakeFactory::DynamicValue.new { |ts|
              ts.deploy_keys_destroy_task_name
+           }
+      task Tasks::Secrets::Provision,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.secrets_provision_task_name
+           }
+      task Tasks::Secrets::Destroy,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.secrets_destroy_task_name
+           }
+      task Tasks::Secrets::Ensure,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.secrets_ensure_task_name
+           },
+           provision_task_name: RakeFactory::DynamicValue.new { |ts|
+             ts.secrets_provision_task_name
+           },
+           destroy_task_name: RakeFactory::DynamicValue.new { |ts|
+             ts.secrets_destroy_task_name
+           }
+      task Tasks::Environments::Provision,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.environments_provision_task_name
+           }
+      task Tasks::Environments::Destroy,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.environments_destroy_task_name
+           }
+      task Tasks::Environments::Ensure,
+           name: RakeFactory::DynamicValue.new { |ts|
+             ts.environments_ensure_task_name
+           },
+           provision_task_name: RakeFactory::DynamicValue.new { |ts|
+             ts.environments_provision_task_name
+           },
+           destroy_task_name: RakeFactory::DynamicValue.new { |ts|
+             ts.environments_destroy_task_name
            }
       task Tasks::PullRequests::Merge
 
@@ -57,6 +105,8 @@ module RakeGithub
       def resolve_namespace(task_definition)
         case task_definition.klass.to_s
         when /DeployKeys/ then deploy_keys_namespace
+        when /Secrets/ then secrets_namespace
+        when /Environments/ then environments_namespace
         when /PullRequests/ then :pull_requests
         end
       end

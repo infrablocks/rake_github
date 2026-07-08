@@ -39,6 +39,69 @@ RSpec.describe RakeGithub do
     end
   end
 
+  describe 'define_secrets_tasks' do
+    context 'when instantiating RakeGithub::TaskSets::Secrets' do
+      # rubocop:disable RSpec/MultipleExpectations
+      it 'passes the provided block' do
+        opts = {
+          repository: 'org/repo'
+        }
+
+        block = lambda do |t|
+          t.access_token = 'some-token'
+          t.secrets = [
+            {
+              name: 'SOME_SECRET',
+              value: 'some-value'
+            }
+          ]
+        end
+
+        allow(RakeGithub::TaskSets::Secrets).to(receive(:define))
+
+        described_class.define_secrets_tasks(opts, &block)
+
+        expect(RakeGithub::TaskSets::Secrets)
+          .to(have_received(:define) do |passed_opts, &passed_block|
+            expect(passed_opts).to(eq(opts))
+            expect(passed_block).to(eq(block))
+          end)
+      end
+      # rubocop:enable RSpec/MultipleExpectations
+    end
+  end
+
+  describe 'define_environments_tasks' do
+    context 'when instantiating RakeGithub::TaskSets::Environments' do
+      # rubocop:disable RSpec/MultipleExpectations
+      it 'passes the provided block' do
+        opts = {
+          repository: 'org/repo'
+        }
+
+        block = lambda do |t|
+          t.access_token = 'some-token'
+          t.environments = [
+            {
+              name: 'release'
+            }
+          ]
+        end
+
+        allow(RakeGithub::TaskSets::Environments).to(receive(:define))
+
+        described_class.define_environments_tasks(opts, &block)
+
+        expect(RakeGithub::TaskSets::Environments)
+          .to(have_received(:define) do |passed_opts, &passed_block|
+            expect(passed_opts).to(eq(opts))
+            expect(passed_block).to(eq(block))
+          end)
+      end
+      # rubocop:enable RSpec/MultipleExpectations
+    end
+  end
+
   describe 'define_repository_tasks' do
     context 'when instantiating RakeGithub::TaskSets::Repository' do
       # rubocop:disable RSpec/MultipleExpectations

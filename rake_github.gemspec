@@ -36,8 +36,9 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 3.1'
 
   spec.add_dependency 'colored2', '~> 3.1'
-  spec.add_dependency 'octokit', '>= 4.16', '< 11.0'
+  spec.add_dependency 'octokit', '>= 7.0', '< 11.0'
   spec.add_dependency 'rake_factory', '~> 0.33'
+  spec.add_dependency 'rbnacl', '~> 7.1'
   spec.add_dependency 'sshkey', '~> 2.0'
 
   spec.add_development_dependency 'activesupport'
