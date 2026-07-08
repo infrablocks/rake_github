@@ -53,8 +53,12 @@ module RakeGithub
         def resolve_reviewer(client, org, reviewer)
           if reviewer[:team]
             { type: 'Team', id: resolve_team_id(client, org, reviewer[:team]) }
-          else
+          elsif reviewer[:user]
             { type: 'User', id: resolve_user_id(client, reviewer[:user]) }
+          else
+            raise(ArgumentError,
+                  "invalid reviewer: #{reviewer.inspect} " \
+                  '(must have :team or :user)')
           end
         end
 

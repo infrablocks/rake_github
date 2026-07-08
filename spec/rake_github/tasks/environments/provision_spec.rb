@@ -356,6 +356,19 @@ describe RakeGithub::Tasks::Environments::Provision do
     expect(client).to(have_received(:user).once)
   end
 
+  it 'raises for a reviewer with neither team nor user' do
+    define_task(
+      repository: 'infrablocks/rake_github',
+      access_token: 'some-token',
+      environments: [
+        { name: 'release', reviewers: [{ nonsense: 'value' }] }
+      ]
+    )
+
+    expect { Rake::Task['environments:provision'].invoke }
+      .to(raise_error(ArgumentError, /must have :team or :user/))
+  end
+
   def team_resource(id)
     agent = Sawyer::Agent.new('https://api.github.com')
     Sawyer::Resource.new(agent, { id: })

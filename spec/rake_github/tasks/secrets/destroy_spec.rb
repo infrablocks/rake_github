@@ -145,6 +145,40 @@ describe RakeGithub::Tasks::Secrets::Destroy do
             .with(repository, 'SOME_SECRET'))
   end
 
+  # rubocop:disable RSpec/MultipleExpectations
+  it 'still deletes remaining secrets when an earlier secret is absent' do
+    repository = 'org/repo'
+
+    client = stub_github_client
+    allow(client)
+      .to(receive(:delete_actions_secret)
+            .with(repository, 'SECRET_ONE')
+            .and_raise(Octokit::NotFound))
+    allow(client)
+      .to(receive(:delete_dependabot_secret)
+            .with(repository, 'SECRET_ONE')
+            .and_raise(Octokit::NotFound))
+
+    define_task(
+      repository:,
+      access_token: 'some-token',
+      secrets: [
+        { name: 'SECRET_ONE', value: 'value-one' },
+        { name: 'SECRET_TWO', value: 'value-two' }
+      ]
+    )
+
+    Rake::Task['secrets:destroy'].invoke
+
+    expect(client)
+      .to(have_received(:delete_actions_secret)
+            .with(repository, 'SECRET_TWO'))
+    expect(client)
+      .to(have_received(:delete_dependabot_secret)
+            .with(repository, 'SECRET_TWO'))
+  end
+  # rubocop:enable RSpec/MultipleExpectations
+
   it 'does not raise when the dependabot secret is absent' do
     repository = 'org/repo'
 
