@@ -22,6 +22,19 @@ and this project adheres to
 * The `secrets` task group is also included in the tasks defined by
   `RakeGithub.define_repository_tasks`.
 
+* New `environments` task group, defined via
+  `RakeGithub.define_environments_tasks`, for managing GitHub deployment
+  environments. It exposes `provision`, `destroy` and `ensure` tasks, and
+  supports protection rules including required reviewers.
+
+  Environments are supplied as an array of hashes, e.g.
+  `[{ name: 'release', reviewers: [{ team: 'maintainers' }] }]`. Only `name`
+  is required; team and user reviewers are resolved to their numeric ids
+  before being sent to GitHub.
+
+* The `environments` task group is also included in the tasks defined by
+  `RakeGithub.define_repository_tasks`.
+
 ### Changed
 
 * The `pull_requests:merge` task no longer requires setting the branch name and

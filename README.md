@@ -57,6 +57,11 @@ end
 | secrets_destroy_task_name       | symbol | N        | Option to change the secrets destroy task name             | :obliterate                                            | :destroy                             |
 | secrets_provision_task_name     | symbol | N        | Option to change the secrets provision task name           | :add                                                   | :provision                           |
 | secrets_ensure_task_name        | symbol | N        | Option to change the secrets ensure task name              | :destroy_and_provision                                 | :ensure                              |
+| environments                    | array  | N        | Environments to provision on the repository                | { name: string, reviewers: array }                     | [ ]                                  |
+| environments_namespace          | symbol | N        | Namespace to contain environments tasks                    | :repository_environments                               | :environments                        |
+| environments_destroy_task_name  | symbol | N        | Option to change the environments destroy task name        | :obliterate                                            | :destroy                             |
+| environments_provision_task_name| symbol | N        | Option to change the environments provision task name      | :add                                                   | :provision                           |
+| environments_ensure_task_name   | symbol | N        | Option to change the environments ensure task name         | :destroy_and_provision                                 | :ensure                              |
 | namespace                       | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :rake_github                                           | N/A                                  |
 
 Exposes tasks:
@@ -70,6 +75,9 @@ rake github:deploy_keys:provision
 rake github:secrets:destroy
 rake github:secrets:ensure
 rake github:secrets:provision
+rake github:environments:destroy
+rake github:environments:ensure
+rake github:environments:provision
 rake github:pull_requests:merge[branch_name,commit_message]
 ```
 
@@ -149,6 +157,74 @@ the Actions and Dependabot secret stores.
 #### secrets:ensure
 
 Destroys and then provisions the specified secrets on the repository.
+
+### define_environments_tasks
+
+Sets up rake tasks for managing GitHub deployment environments, including
+protection rules such as required reviewers. Team and user reviewers are
+resolved to their numeric ids before being sent to GitHub.
+
+```ruby
+require 'rake_github'
+
+RakeGithub.define_environments_tasks(
+  namespace: :environments,
+  repository: 'org/repo', # required
+) do |t|
+  t.access_token = "your_github_access_token" # required
+  t.environments = [
+    {
+      name: 'release',
+      wait_timer: 0,
+      prevent_self_review: false,
+      reviewers: [
+        { team: 'maintainers' },
+        { user: 'someone' }
+      ],
+      deployment_branch_policy: {
+        protected_branches: true,
+        custom_branch_policies: false
+      }
+    }
+  ]
+end
+```
+
+Only `name` is required for each environment; every other key is optional and
+is omitted from the GitHub API payload when absent.
+
+| Parameter            | Type   | Required | Description                                                | Example                                     | Default        |
+|----------------------|--------|----------|------------------------------------------------------------|---------------------------------------------|----------------|
+| repository           | string | Y        | Repository to perform tasks upon                           | 'organisation/repository_name'              | N/A            |
+| access_token         | string | Y        | Github token for authorisation                             | 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' | N/A            |
+| environments         | array  | N        | Environments to provision on the repository                | { name: string, reviewers: array }          | [ ]            |
+| destroy_task_name    | symbol | N        | Option to change the destroy task name                     | :obliterate                                 | :destroy       |
+| provision_task_name  | symbol | N        | Option to change the provision task name                   | :add                                        | :provision     |
+| ensure_task_name     | symbol | N        | Option to change the ensure task name                      | :destroy_and_provision                      | :ensure        |
+| namespace            | symbol | N        | Namespace for tasks to live in, defaults to root namespace | :environments                               | N/A            |
+
+Exposes tasks:
+
+```shell
+$ rake -T
+
+rake environments:destroy
+rake environments:ensure
+rake environments:provision
+```
+
+#### environments:provision
+
+Provisions the specified environments on the repository, resolving any team
+and user reviewers to their numeric ids.
+
+#### environments:destroy
+
+Destroys the specified environments from the repository.
+
+#### environments:ensure
+
+Destroys and then provisions the specified environments on the repository.
 
 ### define_release_task
 
