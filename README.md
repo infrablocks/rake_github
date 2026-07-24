@@ -51,7 +51,7 @@ RakeGithub.define_repository_tasks(
   t.access_token = "your_github_access_token" # required
   t.deploy_keys = [
     {
-      title: 'CircleCI',
+      title: 'Deploy Key',
       public_key: File.read('path/to/your_deploy_key.public')
     }
   ]
@@ -268,16 +268,16 @@ release a new version, update the version number in `version.rb`, and then run
 git commits and tags, and push the `.gem` file to
 [rubygems.org](https://rubygems.org).
 
-### Managing CircleCI keys
+### Managing CI keys
 
-To encrypt a GPG key for use by CircleCI:
+To encrypt a GPG key for use by CI:
 
 ```bash
 openssl aes-256-cbc \
   -e \
   -md sha1 \
   -in ./config/secrets/ci/gpg.private \
-  -out ./.circleci/gpg.private.enc \
+  -out ./.github/gpg.private.enc \
   -k "<passphrase>"
 ```
 
@@ -287,7 +287,7 @@ To check decryption is working correctly:
 openssl aes-256-cbc \
   -d \
   -md sha1 \
-  -in ./.circleci/gpg.private.enc \
+  -in ./.github/gpg.private.enc \
   -k "<passphrase>"
 ```
 
